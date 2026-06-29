@@ -10,9 +10,9 @@ const geistMono = Geist_Mono({
 })
 
 export const metadata: Metadata = {
-  title: 'VlaserStore - Professional Security & Surveillance Systems',
-  description: 'Enterprise-grade CCTV, network surveillance, and alarm systems. Modern security solutions for businesses and organizations worldwide.',
-  generator: 'v0.app',
+  title: 'Vlaser Solution - Technology Service Provider | CCTV, Network, Security',
+  description: 'Professional CCTV, network, access control, alarm systems & smart locks from Hikvision, UNV, ZKTeco, EZVIZ, HUAWEI. Vlaser Solution - Cambodia\'s trusted security technology provider.',
+  generator: 'Vlaser Solution',
   icons: {
     icon: [
       {
@@ -35,8 +35,8 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   colorScheme: 'dark',
   themeColor: [
-    { media: '(prefers-color-scheme: light)', color: '#0ea5e9' },
-    { media: '(prefers-color-scheme: dark)', color: '#0ea5e9' },
+    { media: '(prefers-color-scheme: light)', color: '#8B3A42' },
+    { media: '(prefers-color-scheme: dark)', color: '#8B3A42' },
   ],
 }
 
