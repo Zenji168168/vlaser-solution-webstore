@@ -8,15 +8,16 @@ function esc(str) {
   return str.replace(/\\/g, '\\\\').replace(/"/g, '\\"').replace(/\n/g, ' ').replace(/\r/g, '').replace(/\t/g, ' ').replace(/[\u0000-\u001F\u007F-\u009F]/g, '');
 }
 
-function getImage(img, brand, sku) {
-  // Keep real product images (not bing, not base64)
-  if (img && !img.includes('tse.mm.bing.net') && !img.startsWith('data:') && img.startsWith('http')) {
-    return img;
+function getImage(img) {
+  // Use the ORIGINAL image from the export as-is (skip base64 only)
+  if (!img || img.startsWith('data:')) {
+    return 'https://placehold.co/600x400/1a1a2e/555?text=No+Image';
   }
-  // For all others, use a placeholder service with product info
-  const text = encodeURIComponent((sku || '').substring(0, 20));
-  const brandText = encodeURIComponent((brand || '').substring(0, 15));
-  return `https://placehold.co/600x400/1a1a2e/ffffff?text=${brandText}%0A${text}`;
+  // Keep original URL but upgrade bing size
+  if (img.includes('tse.mm.bing.net')) {
+    return img.replace(/w=240/g, 'w=600').replace(/h=180/g, 'h=400');
+  }
+  return img;
 }
 
 let output = `export type Product = {
@@ -54,7 +55,7 @@ raw.forEach((p, i) => {
   const category = esc(p.category || 'Other');
   const status = esc(p.status || 'Price List');
   const qty = typeof p.qty === 'number' ? p.qty : parseInt(p.qty) || 0;
-  const image = esc(getImage(p.image, p.brand, p.sku));
+  const image = esc(getImage(p.image));
 
   output += `  { id: "${id}", sku: "${sku}", name: "${name}", description: "${desc}", price: ${price.toFixed(2)}, brand: "${brand}", category: "${category}", status: "${status}", qty: ${qty}, image: "${image}" },\n`;
 });
@@ -68,8 +69,4 @@ export function getProductsByBrand(brand: string) { if (brand === 'All') return 
 `;
 
 fs.writeFileSync('lib/products-data.ts', output, 'utf8');
-
-// Count real vs placeholder
-const realCount = raw.filter(p => p.image && !p.image.includes('tse.mm.bing.net') && !p.image.startsWith('data:') && p.image.startsWith('http')).length;
-console.log(`Done: ${raw.length} products`);
-console.log(`Real images: ${realCount}, Placeholders: ${raw.length - realCount}`);
+console.log('Done: ' + raw.length + ' products with original images restored');
