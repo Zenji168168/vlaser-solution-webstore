@@ -50,14 +50,14 @@ export function LangCurrencyToggle() {
     <div className="flex items-center gap-1">
       <button
         onClick={() => setLang(lang === 'en' ? 'km' : 'en')}
-        className="px-2.5 py-1.5 text-[10px] font-bold rounded-lg border border-border/50 hover:border-red-900/50 hover:bg-red-950/10 transition-all uppercase tracking-wider"
+        className="px-2.5 py-1.5 text-[10px] font-bold rounded-lg border border-gray-200 hover:border-primary/50 hover:bg-primary/5 transition-all uppercase tracking-wider"
         title={lang === 'en' ? 'Switch to Khmer' : 'Switch to English'}
       >
         {lang === 'en' ? 'ខ្មែរ' : 'EN'}
       </button>
       <button
         onClick={() => setCurrency(currency === 'USD' ? 'KHR' : 'USD')}
-        className="px-2.5 py-1.5 text-[10px] font-bold rounded-lg border border-border/50 hover:border-amber-900/50 hover:bg-amber-950/10 transition-all"
+        className="px-2.5 py-1.5 text-[10px] font-bold rounded-lg border border-gray-200 hover:border-secondary/50 hover:bg-secondary/5 transition-all"
         title={currency === 'USD' ? 'Switch to Riel' : 'Switch to USD'}
       >
         {currency === 'USD' ? '៛ KHR' : '$ USD'}
@@ -65,3 +65,4 @@ export function LangCurrencyToggle() {
     </div>
   )
 }
+
