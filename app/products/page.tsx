@@ -37,7 +37,10 @@ function ProductsContent() {
       <nav className="sticky top-0 z-50 bg-white/80 backdrop-blur-lg border-b border-gray-100">
         <div className="max-w-7xl mx-auto px-4 lg:px-8 h-14 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2">
-            <img src="/vlaser-logo.png" alt="Vlaser" className="h-8 object-contain" />
+            <div className="flex items-center gap-2">
+              <img src="/vlaser-logo.png" alt="Vlaser" className="h-8 object-contain" />
+              <span className="text-base font-bold tracking-tight text-gray-900 hidden sm:block">Vlaser <span className="text-primary">Store</span></span>
+            </div>
           </Link>
           <div className="flex items-center gap-1">
             <Link href="/" className="px-3 py-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors rounded-md hover:bg-muted/50">Home</Link>
@@ -149,6 +152,8 @@ function ProductsContent() {
 export default function ProductsPage() {
   return (<Suspense fallback={<div className="min-h-screen bg-white flex items-center justify-center"><div className="w-6 h-6 border-2 border-red-900 border-t-transparent rounded-full animate-spin"/></div>}><ProductsContent /></Suspense>)
 }
+
+
 
 
 

@@ -1,4 +1,4 @@
-import { Analytics } from '@vercel/analytics/next'
+﻿import { Analytics } from '@vercel/analytics/next'
 import type { Metadata, Viewport } from 'next'
 import { Geist, Geist_Mono } from 'next/font/google'
 import './globals.css'
@@ -11,11 +11,11 @@ const geistMono = Geist_Mono({
 })
 
 export const metadata: Metadata = {
-  title: 'Vlaser Solution - Technology Service Provider | CCTV, Network, Security',
+  title: 'Vlaser Store - Professional Security & IT Solutions',
   description: 'Professional CCTV, network, access control, alarm systems & smart locks from Hikvision, UNV, ZKTeco, EZVIZ, HUAWEI. Vlaser Solution - Cambodia\'s trusted security technology provider.',
   generator: 'Vlaser Solution',
   icons: {
-    icon: '/vlaser-logo.png',
+    icon: { url: '/favicon.svg', type: 'image/svg+xml' },
     apple: '/vlaser-logo.png',
   },
 }
@@ -44,3 +44,4 @@ export default function RootLayout({
     </html>
   )
 }
+

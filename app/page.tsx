@@ -32,7 +32,10 @@ export default function Home() {
       <nav className="fixed top-0 w-full z-50 bg-white/80 backdrop-blur-xl border-b border-gray-100 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 lg:px-8 h-16 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2">
-            <img src="/vlaser-logo.png" alt="Vlaser Solution" className="h-10 object-contain" />
+            <div className="flex items-center gap-2.5">
+              <img src="/vlaser-logo.png" alt="Vlaser" className="h-9 object-contain" />
+              <span className="text-lg font-bold tracking-tight text-gray-900 hidden sm:block">Vlaser <span className="text-primary">Store</span></span>
+            </div>
           </Link>
           <div className="flex items-center gap-1">
             <Link href="/products" className="hidden md:flex px-3 py-2 text-sm text-gray-600 hover:text-primary transition-colors rounded-lg hover:bg-gray-50">Products</Link>
@@ -191,3 +194,4 @@ export default function Home() {
     </div>
   )
 }
+
