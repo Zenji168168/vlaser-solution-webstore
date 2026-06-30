@@ -8,19 +8,15 @@ function esc(str) {
   return str.replace(/\\/g, '\\\\').replace(/"/g, '\\"').replace(/\n/g, ' ').replace(/\r/g, '').replace(/\t/g, ' ').replace(/[\u0000-\u001F\u007F-\u009F]/g, '');
 }
 
-function betterImage(img, brand, sku, name) {
-  // If the original export already has a real product image URL (not bing thumbnail), use it
-  if (img && !img.includes('tse.mm.bing.net') && img.startsWith('http')) {
+function getImage(img, brand, sku) {
+  // Keep real product images (not bing, not base64)
+  if (img && !img.includes('tse.mm.bing.net') && !img.startsWith('data:') && img.startsWith('http')) {
     return img;
   }
-  
-  // Use brand-specific CDN/search for better images
-  const cleanSku = (sku || '').replace(/[^a-zA-Z0-9-]/g, '+');
-  const cleanBrand = (brand || '').replace(/\s/g, '+');
-  
-  // Use higher quality Bing image search with better parameters
-  const query = `${cleanBrand}+${cleanSku}+official+product`;
-  return `https://tse.mm.bing.net/th?q=${query}&w=800&h=600&c=7&rs=1&p=0&o=5&pid=1.7`;
+  // For all others, use a placeholder service with product info
+  const text = encodeURIComponent((sku || '').substring(0, 20));
+  const brandText = encodeURIComponent((brand || '').substring(0, 15));
+  return `https://placehold.co/600x400/1a1a2e/ffffff?text=${brandText}%0A${text}`;
 }
 
 let output = `export type Product = {
@@ -58,7 +54,7 @@ raw.forEach((p, i) => {
   const category = esc(p.category || 'Other');
   const status = esc(p.status || 'Price List');
   const qty = typeof p.qty === 'number' ? p.qty : parseInt(p.qty) || 0;
-  const image = esc(betterImage(p.image, p.brand, p.sku, p.name));
+  const image = esc(getImage(p.image, p.brand, p.sku));
 
   output += `  { id: "${id}", sku: "${sku}", name: "${name}", description: "${desc}", price: ${price.toFixed(2)}, brand: "${brand}", category: "${category}", status: "${status}", qty: ${qty}, image: "${image}" },\n`;
 });
@@ -72,4 +68,8 @@ export function getProductsByBrand(brand: string) { if (brand === 'All') return 
 `;
 
 fs.writeFileSync('lib/products-data.ts', output, 'utf8');
-console.log('Done: ' + raw.length + ' products with better images');
+
+// Count real vs placeholder
+const realCount = raw.filter(p => p.image && !p.image.includes('tse.mm.bing.net') && !p.image.startsWith('data:') && p.image.startsWith('http')).length;
+console.log(`Done: ${raw.length} products`);
+console.log(`Real images: ${realCount}, Placeholders: ${raw.length - realCount}`);

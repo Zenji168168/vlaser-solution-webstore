@@ -5,9 +5,11 @@ import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import { Suspense } from 'react'
 import { products, CATEGORIES, BRANDS } from '@/lib/products-data'
+import { useApp, LangCurrencyToggle } from '@/components/app-context'
 
 function ProductsContent() {
   const searchParams = useSearchParams()
+  const { formatPrice, t } = useApp()
   const [search, setSearch] = useState('')
   const [category, setCategory] = useState(searchParams.get('category') || 'All')
   const [brand, setBrand] = useState(searchParams.get('brand') || 'All')
@@ -39,7 +41,7 @@ function ProductsContent() {
           </Link>
           <div className="flex items-center gap-1">
             <Link href="/" className="px-3 py-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors rounded-md hover:bg-muted/50">Home</Link>
-            <span className="px-3 py-1.5 text-xs text-red-400 font-medium">Products</span>
+            <span className="px-3 py-1.5 text-xs text-red-400 font-medium">Products</span>`n            <LangCurrencyToggle />
           </div>
         </div>
       </nav>
@@ -90,7 +92,7 @@ function ProductsContent() {
                   <h3 className="font-medium text-xs sm:text-sm mt-0.5 line-clamp-2 leading-snug group-hover:text-red-400 transition-colors">{p.name}</h3>
                   <p className="text-[10px] text-muted-foreground mt-1 line-clamp-1 hidden sm:block">{p.description}</p>
                   <div className="mt-auto pt-2 flex items-center justify-between">
-                    <span className="text-sm sm:text-base font-bold">${p.price.toFixed(2)}</span>
+                    <span className="text-sm sm:text-base font-bold">{formatPrice(p.price)}</span>
                     <span className="text-[9px] text-muted-foreground font-mono hidden sm:inline">{p.sku.substring(0,15)}</span>
                   </div>
                 </div>
@@ -147,4 +149,5 @@ function ProductsContent() {
 export default function ProductsPage() {
   return (<Suspense fallback={<div className="min-h-screen bg-background flex items-center justify-center"><div className="w-6 h-6 border-2 border-red-900 border-t-transparent rounded-full animate-spin"/></div>}><ProductsContent /></Suspense>)
 }
+
 

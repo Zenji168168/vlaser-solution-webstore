@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { products, CATEGORIES } from '@/lib/products-data'
+import { useApp, LangCurrencyToggle } from '@/components/app-context'
 
 function useVisible(ref: React.RefObject<HTMLElement | null>, threshold = 0.15) {
   const [vis, setVis] = useState(false)
@@ -15,6 +16,7 @@ function useVisible(ref: React.RefObject<HTMLElement | null>, threshold = 0.15) 
 }
 
 export default function Home() {
+  const { formatPrice, t } = useApp()
   const [mounted, setMounted] = useState(false)
   const heroRef = useRef<HTMLDivElement>(null)
   const catRef = useRef<HTMLDivElement>(null)
@@ -58,6 +60,7 @@ export default function Home() {
             <Link href="/products?category=CCTV" className="hidden lg:flex px-3.5 py-2 text-xs text-muted-foreground hover:text-foreground transition-all rounded-lg hover:bg-white/5">CCTV</Link>
             <Link href="/products?category=Network" className="hidden lg:flex px-3.5 py-2 text-xs text-muted-foreground hover:text-foreground transition-all rounded-lg hover:bg-white/5">Network</Link>
             <a href="https://wa.me/85512345678" target="_blank" rel="noopener noreferrer" className="hidden sm:flex ml-1 px-3.5 py-2 text-xs text-green-400 hover:text-green-300 transition-all rounded-lg hover:bg-green-500/5 border border-green-900/30">💬 Chat</a>
+            <LangCurrencyToggle />
             <Link href="/products" className="ml-2 px-4 py-2.5 bg-gradient-to-r from-red-800 to-red-700 hover:from-red-700 hover:to-red-600 text-white text-xs font-semibold rounded-xl transition-all hover:shadow-lg hover:shadow-red-900/30 hover:-translate-y-0.5 active:translate-y-0">
               Shop Now
             </Link>
@@ -172,7 +175,7 @@ export default function Home() {
                     <span className="text-[10px] font-bold text-amber-500/80 uppercase tracking-wider">{p.brand}</span>
                     <h3 className="font-medium text-sm mt-1 line-clamp-2 leading-snug group-hover:text-red-400 transition-colors">{p.name}</h3>
                     <div className="mt-auto pt-3 flex items-baseline gap-1">
-                      <span className="text-lg font-bold">${p.price.toFixed(2)}</span>
+                      <span className="text-lg font-bold">{formatPrice(p.price)}</span>
                       <span className="text-[10px] text-muted-foreground">USD</span>
                     </div>
                   </div>
@@ -199,20 +202,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* === CLIENTS === */}
-      <section className="py-20 px-4 lg:px-8">
-        <div className="max-w-7xl mx-auto text-center">
-          <h2 className="text-2xl sm:text-3xl font-bold tracking-tight mb-3">Trusted by Leading Businesses</h2>
-          <p className="text-sm text-muted-foreground mb-10">Serving clients across Cambodia since 2019</p>
-          <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-6 gap-4">
-            {['Northbridge International School','NorthPark Condominium','Caltex Station Sensok','Ohana Hotel','MEGABELLE BEAUTY CLINIC','AMATA RESIDENCE','MONY Clinic','Inkyung Cambodia Co. Ltd','ActivateC3 Hostel','ផ្សារលើក្រុងកំពុងឆ្នាំង','ស្កាយលេន ផនសប','ផ្សារស្រែអំបិល'].map((c,i)=>(
-              <div key={i} className="px-3 py-4 bg-card/60 border border-border/30 rounded-xl flex items-center justify-center hover:border-red-900/30 transition-colors">
-                <span className="text-[10px] text-muted-foreground text-center font-medium leading-tight">{c}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
+
 
       {/* === CTA === */}
       <section className="py-28 px-4 lg:px-8 relative overflow-hidden border-t border-border/30">
@@ -268,5 +258,8 @@ export default function Home() {
     </div>
   )
 }
+
+
+
 
 

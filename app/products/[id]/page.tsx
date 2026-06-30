@@ -4,11 +4,13 @@ import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useState } from 'react'
 import { products } from '@/lib/products-data'
+import { useApp, LangCurrencyToggle } from '@/components/app-context'
 
 export default function ProductDetail() {
   const { id } = useParams()
   const router = useRouter()
   const product = products.find(p => p.id === id)
+  const { formatPrice, t } = useApp()
   const [showConfirm, setShowConfirm] = useState(false)
   const [qty, setQty] = useState(1)
 
@@ -46,6 +48,7 @@ SKU: ${product.sku}
           <div className="flex items-center gap-1">
             <Link href="/" className="px-3 py-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors">Home</Link>
             <Link href="/products" className="px-3 py-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors">Products</Link>
+            <LangCurrencyToggle />
           </div>
         </div>
       </nav>
@@ -86,8 +89,7 @@ SKU: ${product.sku}
             <p className="text-sm text-muted-foreground leading-relaxed mb-8 max-w-lg">{product.description}</p>
 
             <div className="flex items-baseline gap-2 mb-8">
-              <span className="text-4xl font-black text-red-400">${product.price.toFixed(2)}</span>
-              <span className="text-sm text-muted-foreground">USD</span>
+              <span className="text-4xl font-black text-red-400">{formatPrice(product.price)}</span>
             </div>
 
             {/* Order Button */}
@@ -175,7 +177,7 @@ SKU: ${product.sku}
             {/* Price */}
             <div className="flex items-center justify-between mb-6 p-3 bg-muted/20 rounded-xl">
               <span className="text-sm text-muted-foreground">Total</span>
-              <span className="text-2xl font-black text-red-400">${(product.price * qty).toFixed(2)}</span>
+              <span className="text-2xl font-black text-red-400">{formatPrice(product.price * qty)}</span>
             </div>
 
             {/* Actions */}
@@ -209,4 +211,5 @@ SKU: ${product.sku}
     </div>
   )
 }
+
 
