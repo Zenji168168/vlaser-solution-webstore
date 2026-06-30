@@ -32,7 +32,18 @@ export default function Home() {
     color:c==='CCTV'?'from-red-500/10 to-red-900/5':c==='Network'?'from-cyan-500/10 to-cyan-900/5':c==='Access Control'?'from-amber-500/10 to-amber-900/5':'from-purple-500/10 to-purple-900/5'
   }))
   const featured = products.filter(p=>p.price>=30&&p.price<=400&&p.image.startsWith('http')).slice(0,8)
-  const brands = ['Hikvision','UNV','ZKTeco','EZVIZ','HUAWEI','Watashi','ITC','Toten','ruijie','NGTeco','Comscope','ATECH','Seagate','Vlaser']
+  const brands = [
+    { name: 'Hikvision', logo: 'https://www.hikvision.com/content/dam/hikvision/en/marketing/image/latest-news/20211013/Hikvision_logo_B.png' },
+    { name: 'UNV', logo: 'https://www.uniview.com/uploadfile/image/Uniview-logo.png' },
+    { name: 'ZKTeco', logo: 'https://www.zkteco.com/uploads/allimg/20210901/1-210Z1094321613.png' },
+    { name: 'EZVIZ', logo: 'https://www.ezviz.com/Content/imgs/ezviz-logo.svg' },
+    { name: 'HUAWEI', logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/e/e8/Huawei_Logo.svg/512px-Huawei_Logo.svg.png' },
+    { name: 'Watashi', logo: 'https://www.watashi.co.th/wp-content/uploads/2020/01/watashi-logo.png' },
+    { name: 'ITC', logo: 'https://www.itctech.com.cn/Public/Uploads/uploadfile/images/20210901/itc-logo.png' },
+    { name: 'Toten', logo: 'https://toten.com/wp-content/uploads/2020/03/toten-logo.png' },
+    { name: 'Ruijie', logo: 'https://www.ruijienetworks.com/resource/upload/image/20220506/1651826968.png' },
+    { name: 'Seagate', logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/ab/Seagate_logo_%282019%29.svg/512px-Seagate_logo_%282019%29.svg.png' },
+  ]
 
   return (
     <div className="min-h-screen bg-background text-foreground overflow-x-hidden">
@@ -101,12 +112,14 @@ export default function Home() {
       </section>
 
       {/* === BRANDS MARQUEE === */}
-      <section className="border-y border-border/30 py-4 overflow-hidden relative">
-        <div className="absolute left-0 top-0 bottom-0 w-32 bg-gradient-to-r from-background to-transparent z-10" />
-        <div className="absolute right-0 top-0 bottom-0 w-32 bg-gradient-to-l from-background to-transparent z-10" />
-        <div className="flex marquee-left whitespace-nowrap">
+      <section className="border-y border-border/20 py-6 overflow-hidden relative bg-card/20">
+        <div className="absolute left-0 top-0 bottom-0 w-40 bg-gradient-to-r from-background to-transparent z-10" />
+        <div className="absolute right-0 top-0 bottom-0 w-40 bg-gradient-to-l from-background to-transparent z-10" />
+        <div className="flex marquee-left items-center">
           {[...brands,...brands,...brands].map((b,i)=>(
-            <span key={i} className="mx-10 text-sm font-bold text-muted-foreground/30 hover:text-muted-foreground/70 transition-colors">{b}</span>
+            <div key={i} className="mx-10 flex-shrink-0 opacity-40 hover:opacity-90 transition-opacity duration-300 grayscale hover:grayscale-0">
+              <img src={b.logo} alt={b.name} className="h-7 sm:h-8 w-auto object-contain" loading="lazy" onError={(e) => { (e.target as HTMLImageElement).style.display='none' }} />
+            </div>
           ))}
         </div>
       </section>
@@ -255,4 +268,5 @@ export default function Home() {
     </div>
   )
 }
+
 
