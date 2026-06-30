@@ -1,7 +1,5 @@
 ﻿const fs = require('fs');
-
 const raw = JSON.parse(fs.readFileSync('products-export.json', 'utf8'));
-
 const categories = [...new Set(raw.map(p => p.category))].sort();
 const brands = [...new Set(raw.map(p => p.brand))].sort();
 
@@ -10,16 +8,19 @@ function esc(str) {
   return str.replace(/\\/g, '\\\\').replace(/"/g, '\\"').replace(/\n/g, ' ').replace(/\r/g, '').replace(/\t/g, ' ').replace(/[\u0000-\u001F\u007F-\u009F]/g, '');
 }
 
-function upgradeImage(img, brand, sku) {
-  if (!img) {
-    return `https://tse.mm.bing.net/th?q=${encodeURIComponent((brand||'') + ' ' + (sku||'') + ' product photo HD')}&w=640&h=480&c=7&rs=1&p=0&o=5&pid=1.7`;
+function betterImage(img, brand, sku, name) {
+  // If the original export already has a real product image URL (not bing thumbnail), use it
+  if (img && !img.includes('tse.mm.bing.net') && img.startsWith('http')) {
+    return img;
   }
-  // Upgrade bing thumbnail URLs to larger size
-  if (img.includes('tse.mm.bing.net')) {
-    return img.replace(/w=240/g, 'w=640').replace(/h=180/g, 'h=480');
-  }
-  // Keep other URLs as-is (they're already good quality)
-  return img;
+  
+  // Use brand-specific CDN/search for better images
+  const cleanSku = (sku || '').replace(/[^a-zA-Z0-9-]/g, '+');
+  const cleanBrand = (brand || '').replace(/\s/g, '+');
+  
+  // Use higher quality Bing image search with better parameters
+  const query = `${cleanBrand}+${cleanSku}+official+product`;
+  return `https://tse.mm.bing.net/th?q=${query}&w=800&h=600&c=7&rs=1&p=0&o=5&pid=1.7`;
 }
 
 let output = `export type Product = {
@@ -57,39 +58,18 @@ raw.forEach((p, i) => {
   const category = esc(p.category || 'Other');
   const status = esc(p.status || 'Price List');
   const qty = typeof p.qty === 'number' ? p.qty : parseInt(p.qty) || 0;
-  const image = esc(upgradeImage(p.image, p.brand, p.sku));
+  const image = esc(betterImage(p.image, p.brand, p.sku, p.name));
 
   output += `  { id: "${id}", sku: "${sku}", name: "${name}", description: "${desc}", price: ${price.toFixed(2)}, brand: "${brand}", category: "${category}", status: "${status}", qty: ${qty}, image: "${image}" },\n`;
 });
 
 output += `]
 
-export function getProductById(id: string) {
-  return products.find((p) => p.id === id)
-}
-
-export function getProductsByCategory(category: string) {
-  if (category === 'All') return products
-  return products.filter((p) => p.category === category)
-}
-
-export function searchProducts(query: string) {
-  const q = query.toLowerCase()
-  return products.filter(
-    (p) =>
-      p.name.toLowerCase().includes(q) ||
-      p.description.toLowerCase().includes(q) ||
-      p.brand.toLowerCase().includes(q) ||
-      p.sku.toLowerCase().includes(q) ||
-      p.category.toLowerCase().includes(q)
-  )
-}
-
-export function getProductsByBrand(brand: string) {
-  if (brand === 'All') return products
-  return products.filter((p) => p.brand === brand)
-}
+export function getProductById(id: string) { return products.find((p) => p.id === id) }
+export function getProductsByCategory(category: string) { if (category === 'All') return products; return products.filter((p) => p.category === category) }
+export function searchProducts(query: string) { const q = query.toLowerCase(); return products.filter((p) => p.name.toLowerCase().includes(q) || p.description.toLowerCase().includes(q) || p.brand.toLowerCase().includes(q) || p.sku.toLowerCase().includes(q) || p.category.toLowerCase().includes(q)) }
+export function getProductsByBrand(brand: string) { if (brand === 'All') return products; return products.filter((p) => p.brand === brand) }
 `;
 
 fs.writeFileSync('lib/products-data.ts', output, 'utf8');
-console.log('Done: ' + raw.length + ' products with HD images');
+console.log('Done: ' + raw.length + ' products with better images');

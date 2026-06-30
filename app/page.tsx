@@ -40,11 +40,7 @@ export default function Home() {
       <nav className="fixed top-0 w-full z-50 glass border-b border-border/30">
         <div className="max-w-7xl mx-auto px-4 lg:px-8 h-16 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2.5 group">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-red-700 to-red-900 flex items-center justify-center text-white font-black text-sm shadow-lg shadow-red-900/20 group-hover:shadow-red-900/40 transition-shadow">V</div>
-            <div className="hidden sm:block">
-              <div className="text-sm font-bold tracking-tight leading-none">VLASER</div>
-              <div className="text-[9px] text-muted-foreground tracking-widest uppercase">Technology Provider</div>
-            </div>
+            <img src="/vlaser-logo.png" alt="Vlaser Solution" className="h-9 sm:h-10 object-contain" />
           </Link>
           <div className="flex items-center gap-1">
             <Link href="/products" className="hidden md:flex px-3.5 py-2 text-xs text-muted-foreground hover:text-foreground transition-all rounded-lg hover:bg-white/5">Products</Link>
@@ -224,8 +220,7 @@ export default function Home() {
         <div className="max-w-7xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-10 mb-12">
           <div className="col-span-2 md:col-span-1">
             <div className="flex items-center gap-2 mb-4">
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-red-700 to-red-900 flex items-center justify-center text-white font-black text-xs">V</div>
-              <span className="font-bold">VLASER</span>
+              <img src="/vlaser-logo.png" alt="Vlaser Solution" className="h-8 object-contain" />
             </div>
             <p className="text-xs text-muted-foreground leading-relaxed">Vlaser Solution Cambodia Co., Ltd<br/>Delivering cutting-edge IT solutions since 2019.<br/>CCTV, Network, Access Control & more.</p>
           </div>
@@ -260,3 +255,4 @@ export default function Home() {
     </div>
   )
 }
+

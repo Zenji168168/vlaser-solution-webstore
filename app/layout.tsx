@@ -14,21 +14,8 @@ export const metadata: Metadata = {
   description: 'Professional CCTV, network, access control, alarm systems & smart locks from Hikvision, UNV, ZKTeco, EZVIZ, HUAWEI. Vlaser Solution - Cambodia\'s trusted security technology provider.',
   generator: 'Vlaser Solution',
   icons: {
-    icon: [
-      {
-        url: '/icon-light-32x32.png',
-        media: '(prefers-color-scheme: light)',
-      },
-      {
-        url: '/icon-dark-32x32.png',
-        media: '(prefers-color-scheme: dark)',
-      },
-      {
-        url: '/icon.svg',
-        type: 'image/svg+xml',
-      },
-    ],
-    apple: '/apple-icon.png',
+    icon: '/vlaser-logo.png',
+    apple: '/vlaser-logo.png',
   },
 }
 
