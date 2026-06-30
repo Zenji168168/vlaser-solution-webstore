@@ -1,221 +1,246 @@
 ﻿'use client'
 
-import { useParams, useRouter } from 'next/navigation'
+import { useParams } from 'next/navigation'
 import Link from 'next/link'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { products } from '@/lib/products-data'
 import { useApp } from '@/components/app-context'
+import { Header } from '@/components/header'
+import { Footer } from '@/components/footer'
+import { ProductCard } from '@/components/product-card'
+import { ProductSpecifications } from '@/components/product-specifications'
+import { cleanText, isGenericDescription, parseDescription, getRelatedProducts, addToRecentlyViewed, getRecentlyViewed } from '@/lib/product-utils'
 
 export default function ProductDetail() {
   const { id } = useParams()
-  const router = useRouter()
   const product = products.find(p => p.id === id)
-  const { formatPrice, t } = useApp()
+  const { formatPrice, t, lang } = useApp()
   const [showConfirm, setShowConfirm] = useState(false)
   const [qty, setQty] = useState(1)
+  const [fullscreen, setFullscreen] = useState(false)
+  const [recentProducts, setRecentProducts] = useState<typeof products>([])
+
+  // Track recently viewed
+  useEffect(() => {
+    if (!product) return
+    addToRecentlyViewed(product.id)
+    const ids = getRecentlyViewed().filter(rid => rid !== product.id)
+    const recent = ids.map(rid => products.find(p => p.id === rid)).filter(Boolean).slice(0, 4) as typeof products
+    setRecentProducts(recent)
+  }, [product])
+
+  // Keyboard: Escape closes fullscreen
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') { setFullscreen(false); setShowConfirm(false) } }
+    window.addEventListener('keydown', handler)
+    return () => window.removeEventListener('keydown', handler)
+  }, [])
 
   if (!product) return (
-    <div className="min-h-screen bg-white flex items-center justify-center flex-col gap-4">
-      <h1 className="text-2xl font-bold">Product Not Found</h1>
-      <Link href="/products" className="text-primary hover:underline text-sm">← Back to Products</Link>
+    <div className="min-h-screen flex flex-col">
+      <Header />
+      <div className="flex-grow flex items-center justify-center flex-col gap-4 py-20">
+        <h1 className="text-xl font-bold text-gray-900">{t('Product Not Found','រកមិនឃើញផលិតផល')}</h1>
+        <Link href="/products" className="btn-primary text-sm">{t('Back to Products','ត្រឡប់ទៅផលិតផល')}</Link>
+      </div>
+      <Footer />
     </div>
   )
 
-  const related = products.filter(p => p.category === product.category && p.id !== product.id).slice(0, 4)
+  const related = getRelatedProducts(product, products, 4)
+  const desc = parseDescription(product.description)
+  const hasRealDescription = !isGenericDescription(product.description)
+  const productUrl = typeof window !== 'undefined' ? window.location.href : ''
 
   const handleOrder = () => {
     const total = (product.price * qty).toFixed(2)
-    const msg = `🛒 សំណើបញ្ជាទិញ
-——————————
-ផលិតផល: ${product.name}
-SKU: ${product.sku}
-ម៉ាក: ${product.brand}
-ចំនួន: ${qty}
-តម្លៃ: $${product.price.toFixed(2)} x ${qty} = $${total}
-——————————
-សូមស្វាគមន៍! ខ្ញុំចង់បញ្ជាទិញផលិតផលនេះ។ តើនៅមានស្តុកទេ?`
+    const msg = lang === 'km'
+      ? `🛒 សំណើបញ្ជាទិញ\n——————————\nផលិតផល: ${product.name}\nSKU: ${product.sku}\nម៉ាក: ${product.brand}\nចំនួន: ${qty}\nតម្លៃ: $${product.price.toFixed(2)} x ${qty} = $${total}\nURL: ${productUrl}\n——————————\nសូមស្វាគមន៍! ខ្ញុំចង់បញ្ជាទិញផលិតផលនេះ។`
+      : `🛒 Order Request\n——————————\nProduct: ${product.name}\nSKU: ${product.sku}\nBrand: ${product.brand}\nQty: ${qty}\nPrice: $${product.price.toFixed(2)} x ${qty} = $${total}\nURL: ${productUrl}\n——————————\nHi! I would like to order this product.`
     window.open(`https://t.me/SANGHAMEUK?text=${encodeURIComponent(msg)}`, '_blank')
   }
 
   return (
-    <div className="min-h-screen bg-white text-foreground">
-      {/* Nav */}
-      <nav className="sticky top-0 z-50 bg-white/80 backdrop-blur-xl border-b border-gray-100">
-        <div className="max-w-7xl mx-auto px-4 lg:px-8 h-14 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2">
-            <div className="flex items-center gap-2">
-              <img src="/vlaser-logo.png" alt="Vlaser" className="h-8 object-contain" />
-              <span className="text-base font-bold tracking-tight text-gray-900 hidden sm:block">Vlaser <span className="text-primary">Store</span></span>
-            </div>
-          </Link>
-          <div className="flex items-center gap-1">
-            <Link href="/" className="px-3 py-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors">Home</Link>
-            <Link href="/products" className="px-3 py-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors">Products</Link>
-            
-          </div>
-        </div>
-      </nav>
+    <div className="min-h-screen flex flex-col">
+      <Header />
 
-      <div className="max-w-7xl mx-auto px-4 lg:px-8 py-8">
-        {/* Breadcrumb */}
-        <div className="flex items-center gap-2 text-xs text-muted-foreground mb-8">
-          <Link href="/products" className="hover:text-foreground transition-colors">Products</Link>
-          <span className="text-border">/</span>
-          <Link href={`/products?category=${encodeURIComponent(product.category)}`} className="hover:text-foreground transition-colors">{product.category}</Link>
-          <span className="text-border">/</span>
-          <span className="text-foreground truncate max-w-[200px]">{product.sku}</span>
-        </div>
+      <main className="flex-grow">
+        <div className="container-page py-6 sm:py-8">
+          {/* Breadcrumb */}
+          <nav className="flex items-center gap-1.5 text-xs text-gray-500 mb-6">
+            <Link href="/" className="hover:text-gray-900 transition-colors">{t('Home','ទំព័រដើម')}</Link>
+            <span className="text-gray-300">/</span>
+            <Link href="/products" className="hover:text-gray-900 transition-colors">{t('Products','ផលិតផល')}</Link>
+            <span className="text-gray-300">/</span>
+            <Link href={`/products?category=${encodeURIComponent(product.category)}`} className="hover:text-gray-900 transition-colors">{cleanText(product.category)}</Link>
+            <span className="text-gray-300">/</span>
+            <span className="text-gray-700 truncate max-w-[150px]">{product.sku}</span>
+          </nav>
 
-        {/* Product */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-14 mb-20">
-          {/* Image */}
-          <div className="gradient-border bg-gray-50 rounded-3xl overflow-hidden flex items-center justify-center p-6 min-h-[320px] lg:min-h-[450px] relative group">
-            <img src={product.image} alt={product.name} className="max-w-full max-h-[400px] object-contain group-hover:scale-105 transition-transform duration-500" />
-            <div className="absolute bottom-4 left-4 flex gap-2">
-              {product.status === 'Available' && <span className="px-2.5 py-1 bg-green-600 text-white text-[10px] rounded-full font-bold">In Stock</span>}
-              {product.status === 'Out of Stock' && <span className="px-2.5 py-1 bg-red-600 text-white text-[10px] rounded-full font-bold">Sold Out</span>}
-              {product.status === 'Price List' && <span className="px-2.5 py-1 bg-blue-600/80 text-white text-[10px] rounded-full font-bold">Order Available</span>}
-              {product.status === 'Low Stock' && <span className="px-2.5 py-1 bg-amber-600 text-white text-[10px] rounded-full font-bold">Low Stock</span>}
-            </div>
-          </div>
-
-          {/* Info */}
-          <div className="flex flex-col justify-center">
-            <div className="flex items-center gap-2 mb-4">
-              <span className="text-xs font-bold text-primary/70 uppercase tracking-wider">{product.brand}</span>
-              <span className="text-xs text-muted-foreground">•</span>
-              <span className="text-xs text-muted-foreground">{product.category}</span>
-            </div>
-
-            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight leading-tight mb-2">{product.name}</h1>
-            <p className="text-xs text-muted-foreground font-mono mb-6">SKU: {product.sku}</p>
-            <p className="text-sm text-muted-foreground leading-relaxed mb-8 max-w-lg">{product.description}</p>
-
-            <div className="flex items-baseline gap-2 mb-8">
-              <span className="text-4xl font-black text-primary">{formatPrice(product.price)}</span>
-            </div>
-
-            {/* Order Button */}
-            <button
-              onClick={() => setShowConfirm(true)}
-              className="w-full sm:w-auto px-10 py-4 bg-gradient-to-r from-primary to-primary/90 hover:from-red-700 hover:to-red-600 text-white font-bold rounded-2xl transition-all hover:shadow-2xl hover:shadow-primary/20 hover:-translate-y-0.5 text-base relative overflow-hidden group"
-            >
-              <span className="relative z-10">🛒 Order Now</span>
-              <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/10 to-white/0 translate-x-[-200%] group-hover:translate-x-[200%] transition-transform duration-700" />
-            </button>
-
-            {/* Product specs */}
-            <div className="mt-8 pt-6 border-t border-gray-100">
-              <div className="grid grid-cols-2 gap-4 text-xs">
-                <div className="flex justify-between p-3 bg-gray-50/60 rounded-lg"><span className="text-muted-foreground">Brand</span><span className="font-medium">{product.brand}</span></div>
-                <div className="flex justify-between p-3 bg-gray-50/60 rounded-lg"><span className="text-muted-foreground">Category</span><span className="font-medium">{product.category}</span></div>
-                <div className="flex justify-between p-3 bg-gray-50/60 rounded-lg"><span className="text-muted-foreground">Status</span><span className="font-medium">{product.status}</span></div>
-                <div className="flex justify-between p-3 bg-gray-50/60 rounded-lg"><span className="text-muted-foreground">Stock</span><span className="font-medium">{product.qty > 0 ? `${product.qty} units` : 'On order'}</span></div>
+          {/* Product layout */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 mb-16">
+            {/* Image */}
+            <div className="relative">
+              <div
+                className="bg-[var(--color-surface)] border border-[var(--color-border-light)] rounded-2xl overflow-hidden flex items-center justify-center p-6 sm:p-10 aspect-square cursor-zoom-in"
+                onClick={() => setFullscreen(true)}
+              >
+                <img
+                  src={product.image}
+                  alt={cleanText(product.name)}
+                  className="max-w-full max-h-full object-contain transition-transform duration-300 hover:scale-105"
+                  onError={(e) => { (e.target as HTMLImageElement).src = '/placeholder.svg' }}
+                />
+              </div>
+              {/* Status */}
+              <div className="absolute top-4 left-4">
+                {product.status === 'Available' && product.qty > 0 && <span className="badge badge-success">{t('In Stock','មានក្នុងស្តុក')}</span>}
+                {product.status === 'Out of Stock' && <span className="badge badge-danger">{t('Out of Stock','អស់ពីស្តុក')}</span>}
+                {product.status === 'Low Stock' && <span className="badge badge-warning">{t('Low Stock','ស្តុកទាប')}</span>}
+                {product.status === 'Price List' && <span className="badge badge-info">{t('Available','មាន')}</span>}
               </div>
             </div>
-          </div>
-        </div>
 
-        {/* Related */}
-        {related.length > 0 && (
-          <div className="border-t border-gray-100 pt-12">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-bold tracking-tight">Related Products</h2>
-              <Link href={`/products?category=${encodeURIComponent(product.category)}`} className="text-xs text-primary hover:text-red-300">View all →</Link>
-            </div>
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-              {related.map(p => (
-                <Link key={p.id} href={`/products/${p.id}`}>
-                  <div className="product-card bg-gray-50 border border-gray-100 rounded-2xl overflow-hidden group">
-                    <div className="aspect-[4/3] bg-gray-50 overflow-hidden">
-                      <img src={p.image} alt={p.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" loading="lazy" />
-                    </div>
-                    <div className="p-3">
-                      <span className="text-[9px] text-primary/70 font-semibold uppercase">{p.brand}</span>
-                      <h3 className="text-xs font-medium mt-0.5 line-clamp-2 group-hover:text-primary transition-colors">{p.name}</h3>
-                      <span className="text-sm font-bold mt-2 block">${p.price.toFixed(2)}</span>
-                    </div>
+            {/* Info */}
+            <div className="flex flex-col">
+              <span className="text-xs font-semibold text-[var(--color-primary)] uppercase tracking-wider">{product.brand}</span>
+              <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 mt-2 leading-tight">{cleanText(product.name)}</h1>
+              <div className="flex items-center gap-3 mt-2 text-xs text-gray-500">
+                <span>{cleanText(product.category)}</span>
+                <span>•</span>
+                <span className="font-mono">SKU: {product.sku}</span>
+              </div>
+
+              {/* Price */}
+              <div className="mt-6 pb-6 border-b border-[var(--color-border-light)]">
+                <span className="text-3xl font-bold text-gray-900">{formatPrice(product.price)}</span>
+                {product.qty > 0 && <span className="text-sm text-gray-500 ml-3">{product.qty} {t('available','មាន')}</span>}
+              </div>
+
+              {/* Description */}
+              <div className="mt-6">
+                <h3 className="text-sm font-semibold text-gray-900 mb-2">{t('Description','ការពិពណ៌នា')}</h3>
+                {hasRealDescription ? (
+                  desc.type === 'list' ? (
+                    <ul className="space-y-1.5">
+                      {desc.content.map((item, i) => (
+                        <li key={i} className="flex gap-2 text-sm text-gray-600">
+                          <span className="text-[var(--color-primary)] mt-1 shrink-0">•</span>
+                          <span>{cleanText(item)}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p className="text-sm text-gray-600 leading-relaxed">{cleanText(desc.content[0] || '')}</p>
+                  )
+                ) : (
+                  <p className="text-sm text-gray-400 italic">
+                    {t('Detailed product information is being updated. Contact our sales team for specifications and availability.',
+                       'ព័ត៌មានលម្អិតរបស់ផលិតផលកំពុងត្រូវបានធ្វើបច្ចុប្បន្នភាព។ សូមទាក់ទងក្រុមការងារផ្នែកលក់របស់យើងសម្រាប់លក្ខណៈបច្ចេកទេស និងស្ថានភាពទំនិញ។')}
+                  </p>
+                )}
+              </div>
+
+              {/* Quantity + Order */}
+              <div className="mt-8 pt-6 border-t border-[var(--color-border-light)]">
+                <div className="flex items-center gap-4 mb-4">
+                  <span className="text-sm text-gray-600">{t('Quantity','ចំនួន')}:</span>
+                  <div className="flex items-center border border-[var(--color-border)] rounded-lg overflow-hidden">
+                    <button onClick={() => setQty(q => Math.max(1, q-1))} className="w-9 h-9 flex items-center justify-center text-gray-600 hover:bg-gray-50 transition-colors text-lg">−</button>
+                    <span className="w-10 h-9 flex items-center justify-center text-sm font-semibold border-x border-[var(--color-border)]">{qty}</span>
+                    <button onClick={() => setQty(q => q+1)} className="w-9 h-9 flex items-center justify-center text-gray-600 hover:bg-gray-50 transition-colors text-lg">+</button>
                   </div>
-                </Link>
-              ))}
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* === ORDER CONFIRMATION MODAL === */}
-      {showConfirm && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4" onClick={() => setShowConfirm(false)}>
-          <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" />
-          <div className="relative bg-gray-50 border border-gray-200 rounded-3xl p-8 max-w-md w-full shadow-2xl scale-in" onClick={e => e.stopPropagation()}>
-            {/* Header */}
-            <div className="text-center mb-6">
-              <div className="w-14 h-14 mx-auto mb-3 rounded-2xl bg-gradient-to-br from-red-800 to-red-900 flex items-center justify-center text-2xl">🛒</div>
-              <h3 className="text-xl font-bold">Confirm Order</h3>
-              <p className="text-xs text-muted-foreground mt-1">Review your order before sending</p>
-            </div>
-
-            {/* Product Summary */}
-            <div className="bg-gray-50 rounded-2xl p-4 mb-6 border border-gray-100">
-              <div className="flex gap-4">
-                <img src={product.image} alt={product.name} className="w-16 h-16 rounded-xl object-cover bg-muted/50" />
-                <div className="flex-grow min-w-0">
-                  <p className="text-[10px] text-primary/70 font-bold uppercase">{product.brand}</p>
-                  <h4 className="text-sm font-semibold truncate">{product.name}</h4>
-                  <p className="text-[10px] text-muted-foreground font-mono">SKU: {product.sku}</p>
+                </div>
+                <div className="flex gap-3">
+                  <button onClick={() => setShowConfirm(true)} className="btn-primary flex-1 py-3 text-sm">
+                    {t('Order Now','បញ្ជាទិញឥឡូវ')}
+                  </button>
+                  <a href={`https://t.me/SANGHAMEUK`} target="_blank" rel="noopener noreferrer" className="btn-secondary py-3 text-sm px-4">
+                    {t('Contact Sales','ទាក់ទងផ្នែកលក់')}
+                  </a>
                 </div>
               </div>
             </div>
+          </div>
 
-            {/* Quantity */}
-            <div className="flex items-center justify-between mb-4 p-3 bg-gray-50 rounded-xl">
-              <span className="text-sm text-muted-foreground">Quantity</span>
-              <div className="flex items-center gap-3">
-                <button onClick={() => setQty(q => Math.max(1, q-1))} className="w-8 h-8 rounded-lg bg-gray-50 border border-border flex items-center justify-center text-sm font-bold hover:bg-muted/50 transition-colors">−</button>
-                <span className="text-base font-bold w-8 text-center">{qty}</span>
-                <button onClick={() => setQty(q => q+1)} className="w-8 h-8 rounded-lg bg-gray-50 border border-border flex items-center justify-center text-sm font-bold hover:bg-muted/50 transition-colors">+</button>
+          {/* Specifications */}
+          <div className="mb-16">
+            <ProductSpecifications brand={product.brand} category={product.category} sku={product.sku} status={product.status} qty={product.qty} description={product.description} />
+          </div>
+
+          {/* Related Products */}
+          {related.length > 0 && (
+            <section className="mb-16 pt-8 border-t border-[var(--color-border-light)]">
+              <h2 className="text-lg font-bold text-gray-900 mb-6">{t('Related Products','ផលិតផលទាក់ទង')}</h2>
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+                {related.map(p => <ProductCard key={p.id} product={p} />)}
+              </div>
+            </section>
+          )}
+
+          {/* Recently Viewed */}
+          {recentProducts.length > 0 && (
+            <section className="pt-8 border-t border-[var(--color-border-light)]">
+              <h2 className="text-lg font-bold text-gray-900 mb-6">{t('Recently Viewed','បានមើលថ្មីៗ')}</h2>
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+                {recentProducts.map(p => <ProductCard key={p.id} product={p} />)}
+              </div>
+            </section>
+          )}
+        </div>
+      </main>
+
+      {/* Fullscreen image */}
+      {fullscreen && (
+        <div className="fixed inset-0 z-[100] bg-black/90 flex items-center justify-center p-4" onClick={() => setFullscreen(false)}>
+          <button className="absolute top-4 right-4 w-10 h-10 flex items-center justify-center bg-white/10 hover:bg-white/20 rounded-full text-white transition-colors" aria-label={t('Close','បិទ')}>
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12"/></svg>
+          </button>
+          <img src={product.image} alt={product.name} className="max-w-full max-h-full object-contain" onError={(e) => { (e.target as HTMLImageElement).src = '/placeholder.svg' }} />
+        </div>
+      )}
+
+      {/* Order modal */}
+      {showConfirm && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4" onClick={() => setShowConfirm(false)}>
+          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
+          <div className="relative bg-white rounded-2xl p-6 max-w-sm w-full shadow-xl animate-scale-in" onClick={e => e.stopPropagation()}>
+            <h3 className="text-lg font-bold text-gray-900 mb-4">{t('Confirm Order','បញ្ជាក់ការបញ្ជាទិញ')}</h3>
+            <div className="flex gap-3 p-3 bg-[var(--color-surface)] rounded-xl mb-4">
+              <img src={product.image} alt="" className="w-14 h-14 rounded-lg object-contain bg-white border border-[var(--color-border-light)]" onError={(e) => { (e.target as HTMLImageElement).src = '/placeholder.svg' }} />
+              <div className="min-w-0">
+                <p className="text-xs font-semibold text-[var(--color-primary)]">{product.brand}</p>
+                <p className="text-sm font-medium truncate">{cleanText(product.name)}</p>
+                <p className="text-xs text-gray-500 font-mono">{product.sku}</p>
               </div>
             </div>
-
-            {/* Price */}
-            <div className="flex items-center justify-between mb-6 p-3 bg-gray-50 rounded-xl">
-              <span className="text-sm text-muted-foreground">Total</span>
-              <span className="text-2xl font-black text-primary">{formatPrice(product.price * qty)}</span>
+            <div className="flex justify-between items-center py-3 border-t border-b border-[var(--color-border-light)] mb-4">
+              <span className="text-sm text-gray-600">{t('Total','សរុប')}: {qty} × {formatPrice(product.price)}</span>
+              <span className="text-lg font-bold text-gray-900">{formatPrice(product.price * qty)}</span>
             </div>
-
-            {/* Actions */}
-            <button
-              onClick={handleOrder}
-              className="w-full py-4 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white font-bold rounded-xl transition-all hover:shadow-lg text-sm flex items-center justify-center gap-2"
-            >
-              <span>✈️</span> Confirm & Send via Telegram
+            <button onClick={handleOrder} className="w-full btn-primary py-3 text-sm mb-2">
+              ✈️ {t('Send via Telegram','ផ្ញើតាម Telegram')}
             </button>
-            <button onClick={() => setShowConfirm(false)} className="w-full py-3 text-sm text-muted-foreground hover:text-foreground transition-colors mt-3">
-              Cancel
+            <button onClick={() => setShowConfirm(false)} className="w-full text-center text-sm text-gray-500 hover:text-gray-700 py-2 transition-colors">
+              {t('Cancel','បោះបង់')}
             </button>
-
-            <p className="text-[10px] text-muted-foreground text-center mt-4">
-              Your order will be sent to our Telegram.<br/>We will reply within minutes.
-            </p>
           </div>
         </div>
       )}
 
-      {/* Footer */}
-      <footer className="border-t border-gray-100 py-6 px-4 mt-12 bg-gray-50/20">
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <img src="/vlaser-logo.png" alt="Vlaser" className="h-5 object-contain" />
-            <span className="text-[10px] text-muted-foreground">&copy; 2026 Vlaser Solution Cambodia</span>
-          </div>
-          <Link href="/products" className="text-[10px] text-muted-foreground hover:text-foreground transition-colors">← All Products</Link>
+      {/* Mobile sticky action */}
+      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-[var(--color-border)] p-3 flex gap-2 lg:hidden z-40 safe-area-bottom">
+        <div className="flex-shrink-0">
+          <span className="text-lg font-bold text-gray-900">{formatPrice(product.price)}</span>
         </div>
-      </footer>
+        <button onClick={() => setShowConfirm(true)} className="btn-primary flex-1 py-2.5 text-sm">
+          {t('Order Now','បញ្ជាទិញ')}
+        </button>
+      </div>
+      {/* Spacer for mobile sticky */}
+      <div className="h-16 lg:hidden" />
+
+      <Footer />
     </div>
   )
 }
-
-
-
-
-
