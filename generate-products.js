@@ -10,6 +10,18 @@ function esc(str) {
   return str.replace(/\\/g, '\\\\').replace(/"/g, '\\"').replace(/\n/g, ' ').replace(/\r/g, '').replace(/\t/g, ' ').replace(/[\u0000-\u001F\u007F-\u009F]/g, '');
 }
 
+function upgradeImage(img, brand, sku) {
+  if (!img) {
+    return `https://tse.mm.bing.net/th?q=${encodeURIComponent((brand||'') + ' ' + (sku||'') + ' product photo HD')}&w=640&h=480&c=7&rs=1&p=0&o=5&pid=1.7`;
+  }
+  // Upgrade bing thumbnail URLs to larger size
+  if (img.includes('tse.mm.bing.net')) {
+    return img.replace(/w=240/g, 'w=640').replace(/h=180/g, 'h=480');
+  }
+  // Keep other URLs as-is (they're already good quality)
+  return img;
+}
+
 let output = `export type Product = {
   id: string
   sku: string
@@ -45,7 +57,7 @@ raw.forEach((p, i) => {
   const category = esc(p.category || 'Other');
   const status = esc(p.status || 'Price List');
   const qty = typeof p.qty === 'number' ? p.qty : parseInt(p.qty) || 0;
-  const image = esc(p.image || `https://tse.mm.bing.net/th?q=${encodeURIComponent((p.brand||'') + ' ' + (p.sku||'') + ' product photo')}&w=240&h=180&c=7`);
+  const image = esc(upgradeImage(p.image, p.brand, p.sku));
 
   output += `  { id: "${id}", sku: "${sku}", name: "${name}", description: "${desc}", price: ${price.toFixed(2)}, brand: "${brand}", category: "${category}", status: "${status}", qty: ${qty}, image: "${image}" },\n`;
 });
@@ -80,4 +92,4 @@ export function getProductsByBrand(brand: string) {
 `;
 
 fs.writeFileSync('lib/products-data.ts', output, 'utf8');
-console.log('Done: ' + raw.length + ' products');
+console.log('Done: ' + raw.length + ' products with HD images');

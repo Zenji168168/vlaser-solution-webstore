@@ -97,7 +97,7 @@ export default function Home() {
 
           {/* Trust badges */}
           <div className="flex items-center justify-center gap-6 sm:gap-10 text-xs text-muted-foreground">
-            {[{icon:'🏢',text:'Enterprise Grade'},{icon:'🛡️',text:'Authorized Dealer'},{icon:'🚚',text:'Fast Delivery'},{icon:'🔧',text:'Install Service'}].map((b,i)=>(
+            {[{icon:'🏢',text:'Founded 2019'},{icon:'🛡️',text:'Hikvision Authorized'},{icon:'👥',text:'100+ Clients'},{icon:'🔧',text:'Installation Service'}].map((b,i)=>(
               <div key={i} className="flex items-center gap-1.5 opacity-60 hover:opacity-100 transition-opacity"><span>{b.icon}</span><span className="hidden sm:inline">{b.text}</span></div>
             ))}
           </div>
@@ -180,7 +180,7 @@ export default function Home() {
       {/* === STATS === */}
       <section ref={statsRef} className="py-20 px-4 lg:px-8 border-y border-border/30">
         <div className={`max-w-5xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-8 transition-all duration-700 ${statsVis?'opacity-100 translate-y-0':'opacity-0 translate-y-10'}`}>
-          {[{n:'1,382',l:'Products',icon:'📦'},{n:'15',l:'Global Brands',icon:'🌍'},{n:'10',l:'Categories',icon:'📁'},{n:'24/7',l:'Support',icon:'💬'}].map((s,i)=>(
+          {[{n:'5+',l:'Years Experience',icon:'📅'},{n:'100+',l:'Happy Clients',icon:'👥'},{n:'1,382',l:'Products Available',icon:'📦'},{n:'24/7',l:'Technical Support',icon:'🛠️'}].map((s,i)=>(
             <div key={i} className="text-center group">
               <div className="text-2xl mb-2">{s.icon}</div>
               <div className="text-3xl sm:text-4xl font-black bg-gradient-to-b from-foreground to-muted-foreground bg-clip-text text-transparent">{s.n}</div>
@@ -190,14 +190,30 @@ export default function Home() {
         </div>
       </section>
 
+      {/* === CLIENTS === */}
+      <section className="py-20 px-4 lg:px-8">
+        <div className="max-w-7xl mx-auto text-center">
+          <h2 className="text-2xl sm:text-3xl font-bold tracking-tight mb-3">Trusted by Leading Businesses</h2>
+          <p className="text-sm text-muted-foreground mb-10">Serving clients across Cambodia since 2019</p>
+          <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-6 gap-4">
+            {['Northbridge International School','NorthPark Condominium','Caltex Station Sensok','Ohana Hotel','MEGABELLE BEAUTY CLINIC','AMATA RESIDENCE','MONY Clinic','Inkyung Cambodia Co. Ltd','ActivateC3 Hostel','ផ្សារលើក្រុងកំពុងឆ្នាំង','ស្កាយលេន ផនសប','ផ្សារស្រែអំបិល'].map((c,i)=>(
+              <div key={i} className="px-3 py-4 bg-card/60 border border-border/30 rounded-xl flex items-center justify-center hover:border-red-900/30 transition-colors">
+                <span className="text-[10px] text-muted-foreground text-center font-medium leading-tight">{c}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* === CTA === */}
-      <section className="py-28 px-4 lg:px-8 relative overflow-hidden">
+      <section className="py-28 px-4 lg:px-8 relative overflow-hidden border-t border-border/30">
         <div className="absolute inset-0 pointer-events-none"><div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-red-950/20 rounded-full blur-[120px]" /></div>
         <div className="relative max-w-2xl mx-auto text-center">
           <h2 className="text-3xl sm:text-4xl font-bold tracking-tight mb-4">Ready to Upgrade<br/>Your Security?</h2>
           <p className="text-muted-foreground text-sm mb-8">Get competitive quotes on enterprise projects. Free consultation available.</p>
           <div className="flex items-center justify-center gap-3 flex-wrap">
-            <a href="https://wa.me/85512345678" target="_blank" rel="noopener noreferrer" className="px-7 py-3.5 bg-green-700 hover:bg-green-600 text-white font-semibold rounded-xl transition-all hover:shadow-lg hover:shadow-green-900/20 hover:-translate-y-0.5 text-sm">💬 WhatsApp Us</a>
+            <a href="https://wa.me/85596666545" target="_blank" rel="noopener noreferrer" className="px-7 py-3.5 bg-green-700 hover:bg-green-600 text-white font-semibold rounded-xl transition-all hover:shadow-lg hover:shadow-green-900/20 hover:-translate-y-0.5 text-sm">💬 WhatsApp Us</a>
+            <a href="https://t.me/SANGHAMEUK" target="_blank" rel="noopener noreferrer" className="px-7 py-3.5 bg-blue-600 hover:bg-blue-500 text-white font-semibold rounded-xl transition-all hover:shadow-lg hover:-translate-y-0.5 text-sm">✈️ Telegram</a>
             <Link href="/products" className="px-7 py-3.5 border border-border/60 text-foreground font-semibold rounded-xl transition-all hover:bg-card hover:-translate-y-0.5 text-sm">Browse Catalog</Link>
           </div>
         </div>
@@ -211,7 +227,7 @@ export default function Home() {
               <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-red-700 to-red-900 flex items-center justify-center text-white font-black text-xs">V</div>
               <span className="font-bold">VLASER</span>
             </div>
-            <p className="text-xs text-muted-foreground leading-relaxed">Technology Service Provider.<br/>Enterprise security solutions<br/>for Cambodia & Southeast Asia.</p>
+            <p className="text-xs text-muted-foreground leading-relaxed">Vlaser Solution Cambodia Co., Ltd<br/>Delivering cutting-edge IT solutions since 2019.<br/>CCTV, Network, Access Control & more.</p>
           </div>
           <div>
             <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/70 mb-4">Shop</h4>
@@ -224,16 +240,21 @@ export default function Home() {
           <div>
             <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/70 mb-4">Contact</h4>
             <div className="space-y-2.5 text-xs text-muted-foreground">
-              <p className="hover:text-foreground transition-colors cursor-pointer">+855 12 345 678</p>
-              <p className="hover:text-foreground transition-colors cursor-pointer">info@vlasersolution.com</p>
-              <p>Phnom Penh, Cambodia</p>
-              <p className="hover:text-foreground transition-colors cursor-pointer">store.vlasersolution.com</p>
+              <p>012 989 784</p>
+              <p>096 666 9545</p>
+              <p>010 / 078 322 295</p>
+              <p>info@vlasersolutions.com</p>
+              <p>No.8Eo, St14 Borey Piphum Tmey,<br/>Steung Meanchey, Phnom Penh</p>
             </div>
           </div>
         </div>
         <div className="max-w-7xl mx-auto pt-8 border-t border-border/20 flex flex-col sm:flex-row items-center justify-between gap-2">
-          <p className="text-[10px] text-muted-foreground/60">&copy; 2026 Vlaser Solution Co., Ltd. All rights reserved.</p>
-          <p className="text-[10px] text-muted-foreground/40">Powered by Next.js &bull; Deployed on Vercel</p>
+          <p className="text-[10px] text-muted-foreground/60">&copy; 2026 Vlaser Solution Cambodia Co., Ltd. All rights reserved.</p>
+          <div className="flex items-center gap-3">
+            <a href="https://web.facebook.com/profile.php?id=61583380988974" target="_blank" rel="noopener noreferrer" className="text-[10px] text-muted-foreground/40 hover:text-foreground transition-colors">Facebook</a>
+            <a href="https://t.me/SANGHAMEUK" target="_blank" rel="noopener noreferrer" className="text-[10px] text-muted-foreground/40 hover:text-foreground transition-colors">Telegram</a>
+            <a href="https://www.vlasersolution.com" target="_blank" rel="noopener noreferrer" className="text-[10px] text-muted-foreground/40 hover:text-foreground transition-colors">vlasersolution.com</a>
+          </div>
         </div>
       </footer>
     </div>

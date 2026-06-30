@@ -1,12 +1,16 @@
 ﻿'use client'
 
-import { useParams } from 'next/navigation'
+import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { useState } from 'react'
 import { products } from '@/lib/products-data'
 
 export default function ProductDetail() {
   const { id } = useParams()
+  const router = useRouter()
   const product = products.find(p => p.id === id)
+  const [showConfirm, setShowConfirm] = useState(false)
+  const [qty, setQty] = useState(1)
 
   if (!product) return (
     <div className="min-h-screen bg-background flex items-center justify-center flex-col gap-4">
@@ -17,10 +21,24 @@ export default function ProductDetail() {
 
   const related = products.filter(p => p.category === product.category && p.id !== product.id).slice(0, 4)
 
+  const handleOrder = () => {
+    const total = (product.price * qty).toFixed(2)
+    const msg = `🛒 សំណើបញ្ជាទិញ
+——————————
+ផលិតផល: ${product.name}
+SKU: ${product.sku}
+ម៉ាក: ${product.brand}
+ចំនួន: ${qty}
+តម្លៃ: $${product.price.toFixed(2)} x ${qty} = $${total}
+——————————
+សូមស្វាគមន៍! ខ្ញុំចង់បញ្ជាទិញផលិតផលនេះ។ តើនៅមានស្តុកទេ?`
+    window.open(`https://t.me/SANGHAMEUK?text=${encodeURIComponent(msg)}`, '_blank')
+  }
+
   return (
     <div className="min-h-screen bg-background text-foreground">
       {/* Nav */}
-      <nav className="sticky top-0 z-50 bg-background/80 backdrop-blur-lg border-b border-border/40">
+      <nav className="sticky top-0 z-50 glass border-b border-border/30">
         <div className="max-w-7xl mx-auto px-4 lg:px-8 h-14 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2">
             <div className="w-7 h-7 rounded-md bg-gradient-to-br from-red-900 to-red-800 flex items-center justify-center text-white font-black text-[10px]">V</div>
@@ -37,17 +55,17 @@ export default function ProductDetail() {
         {/* Breadcrumb */}
         <div className="flex items-center gap-2 text-xs text-muted-foreground mb-8">
           <Link href="/products" className="hover:text-foreground transition-colors">Products</Link>
-          <span>/</span>
+          <span className="text-border">/</span>
           <Link href={`/products?category=${encodeURIComponent(product.category)}`} className="hover:text-foreground transition-colors">{product.category}</Link>
-          <span>/</span>
+          <span className="text-border">/</span>
           <span className="text-foreground truncate max-w-[200px]">{product.sku}</span>
         </div>
 
         {/* Product */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-14 mb-20">
           {/* Image */}
-          <div className="bg-card border border-border/40 rounded-3xl overflow-hidden flex items-center justify-center p-6 min-h-[320px] lg:min-h-[450px] relative group">
-            <img src={product.image} alt={product.name} className="max-w-full max-h-[380px] object-contain group-hover:scale-105 transition-transform duration-500" />
+          <div className="gradient-border bg-card rounded-3xl overflow-hidden flex items-center justify-center p-6 min-h-[320px] lg:min-h-[450px] relative group">
+            <img src={product.image} alt={product.name} className="max-w-full max-h-[400px] object-contain group-hover:scale-105 transition-transform duration-500" />
             <div className="absolute bottom-4 left-4 flex gap-2">
               {product.status === 'Available' && <span className="px-2.5 py-1 bg-green-600 text-white text-[10px] rounded-full font-bold">In Stock</span>}
               {product.status === 'Out of Stock' && <span className="px-2.5 py-1 bg-red-600 text-white text-[10px] rounded-full font-bold">Sold Out</span>}
@@ -59,39 +77,36 @@ export default function ProductDetail() {
           {/* Info */}
           <div className="flex flex-col justify-center">
             <div className="flex items-center gap-2 mb-4">
-              <span className="text-xs font-semibold text-amber-500 uppercase tracking-wider">{product.brand}</span>
+              <span className="text-xs font-bold text-amber-500 uppercase tracking-wider">{product.brand}</span>
               <span className="text-xs text-muted-foreground">•</span>
               <span className="text-xs text-muted-foreground">{product.category}</span>
             </div>
 
             <h1 className="text-2xl sm:text-3xl font-bold tracking-tight leading-tight mb-2">{product.name}</h1>
             <p className="text-xs text-muted-foreground font-mono mb-6">SKU: {product.sku}</p>
-            
             <p className="text-sm text-muted-foreground leading-relaxed mb-8 max-w-lg">{product.description}</p>
 
             <div className="flex items-baseline gap-2 mb-8">
-              <span className="text-3xl sm:text-4xl font-black">${product.price.toFixed(2)}</span>
+              <span className="text-4xl font-black text-red-400">${product.price.toFixed(2)}</span>
               <span className="text-sm text-muted-foreground">USD</span>
             </div>
 
-            <div className="flex flex-col sm:flex-row gap-3">
-              <a href={`https://wa.me/85512345678?text=Hi Vlaser, I want to inquire about: ${product.name} (${product.sku}) - $${product.price.toFixed(2)}`}
-                target="_blank" rel="noopener noreferrer"
-                className="flex-1 text-center px-6 py-3.5 bg-green-700 hover:bg-green-600 text-white font-semibold rounded-xl transition-all hover:shadow-lg text-sm">
-                💬 WhatsApp Inquiry
-              </a>
-              <a href={`mailto:info@vlasersolution.com?subject=Inquiry: ${product.sku}&body=Hi, I am interested in: ${product.name} (${product.sku}) - $${product.price.toFixed(2)}`}
-                className="flex-1 text-center px-6 py-3.5 border border-border hover:border-red-900/60 text-foreground font-semibold rounded-xl transition-all hover:bg-red-950/10 text-sm">
-                ✉️ Email Inquiry
-              </a>
-            </div>
+            {/* Order Button */}
+            <button
+              onClick={() => setShowConfirm(true)}
+              className="w-full sm:w-auto px-10 py-4 bg-gradient-to-r from-red-800 to-red-700 hover:from-red-700 hover:to-red-600 text-white font-bold rounded-2xl transition-all hover:shadow-2xl hover:shadow-red-900/30 hover:-translate-y-0.5 text-base relative overflow-hidden group"
+            >
+              <span className="relative z-10">🛒 Order Now</span>
+              <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/10 to-white/0 translate-x-[-200%] group-hover:translate-x-[200%] transition-transform duration-700" />
+            </button>
 
-            <div className="mt-6 pt-6 border-t border-border/30">
+            {/* Product specs */}
+            <div className="mt-8 pt-6 border-t border-border/30">
               <div className="grid grid-cols-2 gap-4 text-xs">
-                <div><span className="text-muted-foreground">Brand:</span> <span className="font-medium ml-1">{product.brand}</span></div>
-                <div><span className="text-muted-foreground">Category:</span> <span className="font-medium ml-1">{product.category}</span></div>
-                <div><span className="text-muted-foreground">Status:</span> <span className="font-medium ml-1">{product.status}</span></div>
-                <div><span className="text-muted-foreground">Stock:</span> <span className="font-medium ml-1">{product.qty > 0 ? `${product.qty} units` : 'On order'}</span></div>
+                <div className="flex justify-between p-3 bg-card/60 rounded-lg"><span className="text-muted-foreground">Brand</span><span className="font-medium">{product.brand}</span></div>
+                <div className="flex justify-between p-3 bg-card/60 rounded-lg"><span className="text-muted-foreground">Category</span><span className="font-medium">{product.category}</span></div>
+                <div className="flex justify-between p-3 bg-card/60 rounded-lg"><span className="text-muted-foreground">Status</span><span className="font-medium">{product.status}</span></div>
+                <div className="flex justify-between p-3 bg-card/60 rounded-lg"><span className="text-muted-foreground">Stock</span><span className="font-medium">{product.qty > 0 ? `${product.qty} units` : 'On order'}</span></div>
               </div>
             </div>
           </div>
@@ -124,11 +139,70 @@ export default function ProductDetail() {
         )}
       </div>
 
+      {/* === ORDER CONFIRMATION MODAL === */}
+      {showConfirm && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4" onClick={() => setShowConfirm(false)}>
+          <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" />
+          <div className="relative bg-card border border-border/60 rounded-3xl p-8 max-w-md w-full shadow-2xl scale-in" onClick={e => e.stopPropagation()}>
+            {/* Header */}
+            <div className="text-center mb-6">
+              <div className="w-14 h-14 mx-auto mb-3 rounded-2xl bg-gradient-to-br from-red-800 to-red-900 flex items-center justify-center text-2xl">🛒</div>
+              <h3 className="text-xl font-bold">Confirm Order</h3>
+              <p className="text-xs text-muted-foreground mt-1">Review your order before sending</p>
+            </div>
+
+            {/* Product Summary */}
+            <div className="bg-muted/30 rounded-2xl p-4 mb-6 border border-border/30">
+              <div className="flex gap-4">
+                <img src={product.image} alt={product.name} className="w-16 h-16 rounded-xl object-cover bg-muted/50" />
+                <div className="flex-grow min-w-0">
+                  <p className="text-[10px] text-amber-500 font-bold uppercase">{product.brand}</p>
+                  <h4 className="text-sm font-semibold truncate">{product.name}</h4>
+                  <p className="text-[10px] text-muted-foreground font-mono">SKU: {product.sku}</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Quantity */}
+            <div className="flex items-center justify-between mb-4 p-3 bg-muted/20 rounded-xl">
+              <span className="text-sm text-muted-foreground">Quantity</span>
+              <div className="flex items-center gap-3">
+                <button onClick={() => setQty(q => Math.max(1, q-1))} className="w-8 h-8 rounded-lg bg-card border border-border flex items-center justify-center text-sm font-bold hover:bg-muted/50 transition-colors">−</button>
+                <span className="text-base font-bold w-8 text-center">{qty}</span>
+                <button onClick={() => setQty(q => q+1)} className="w-8 h-8 rounded-lg bg-card border border-border flex items-center justify-center text-sm font-bold hover:bg-muted/50 transition-colors">+</button>
+              </div>
+            </div>
+
+            {/* Price */}
+            <div className="flex items-center justify-between mb-6 p-3 bg-muted/20 rounded-xl">
+              <span className="text-sm text-muted-foreground">Total</span>
+              <span className="text-2xl font-black text-red-400">${(product.price * qty).toFixed(2)}</span>
+            </div>
+
+            {/* Actions */}
+            <button
+              onClick={handleOrder}
+              className="w-full py-4 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white font-bold rounded-xl transition-all hover:shadow-lg text-sm flex items-center justify-center gap-2"
+            >
+              <span>✈️</span> Confirm & Send via Telegram
+            </button>
+            <button onClick={() => setShowConfirm(false)} className="w-full py-3 text-sm text-muted-foreground hover:text-foreground transition-colors mt-3">
+              Cancel
+            </button>
+
+            <p className="text-[10px] text-muted-foreground text-center mt-4">
+              Your order will be sent to our Telegram.<br/>We will reply within minutes.
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* Footer */}
       <footer className="border-t border-border/30 py-6 px-4 mt-12 bg-card/20">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-2">
             <div className="w-5 h-5 rounded bg-red-900 flex items-center justify-center text-white font-black text-[8px]">V</div>
-            <span className="text-[10px] text-muted-foreground">Vlaser Solution &copy; 2026</span>
+            <span className="text-[10px] text-muted-foreground">Vlaser Solution Cambodia &copy; 2026</span>
           </div>
           <Link href="/products" className="text-[10px] text-muted-foreground hover:text-foreground transition-colors">← All Products</Link>
         </div>
