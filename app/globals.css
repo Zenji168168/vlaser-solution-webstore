@@ -1,108 +1,125 @@
 ﻿@import 'tailwindcss';
 @import 'tw-animate-css';
-@import 'shadcn/tailwind.css';
-
-@custom-variant dark (&:is(.dark *));
 
 @theme inline {
-  --font-sans: var(--font-geist-sans), 'Geist Fallback', system-ui, sans-serif;
-  --font-mono: var(--font-geist-mono), 'Geist Mono Fallback', monospace;
-  --color-ring: var(--ring);
-  --color-input: var(--input);
-  --color-border: var(--border);
-  --color-destructive: var(--destructive);
-  --color-accent-foreground: var(--accent-foreground);
-  --color-accent: var(--accent);
-  --color-muted-foreground: var(--muted-foreground);
-  --color-muted: var(--muted);
-  --color-secondary-foreground: var(--secondary-foreground);
-  --color-secondary: var(--secondary);
-  --color-primary-foreground: var(--primary-foreground);
-  --color-primary: var(--primary);
-  --color-card-foreground: var(--card-foreground);
-  --color-card: var(--card);
-  --color-foreground: var(--foreground);
-  --color-background: var(--background);
-  --radius-sm: calc(var(--radius) * 0.6);
-  --radius-md: calc(var(--radius) * 0.8);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) * 1.5);
-}
-
-:root {
-  color-scheme: light;
-  --background: #ffffff;
-  --foreground: #09090b;
-  --card: #f8f8f8;
-  --card-foreground: #09090b;
-  --primary: #8b1a1a;
-  --primary-foreground: #ffffff;
-  --secondary: #92750c;
-  --secondary-foreground: #ffffff;
-  --muted: #f4f4f5;
-  --muted-foreground: #71717a;
-  --accent: #f4f4f5;
-  --accent-foreground: #09090b;
-  --destructive: #dc2626;
-  --border: #e4e4e7;
-  --input: #e4e4e7;
-  --ring: #8b1a1a;
-  --radius: 0.75rem;
+  --font-sans: var(--font-inter), system-ui, -apple-system, sans-serif;
+  --font-khmer: var(--font-khmer), 'Noto Sans Khmer', sans-serif;
+  --color-primary: #7f1d1d;
+  --color-primary-light: #991b1b;
+  --color-primary-lighter: #fef2f2;
+  --color-secondary: #78350f;
+  --color-accent: #0e7490;
+  --color-success: #15803d;
+  --color-warning: #a16207;
+  --color-danger: #dc2626;
+  --color-info: #0369a1;
+  --color-surface: #f9fafb;
+  --color-border: #e5e7eb;
+  --color-border-light: #f3f4f6;
+  --color-text: #111827;
+  --color-text-secondary: #4b5563;
+  --color-text-muted: #9ca3af;
+  --radius-sm: 0.375rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.75rem;
+  --radius-xl: 1rem;
+  --radius-2xl: 1.25rem;
+  --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.07), 0 2px 4px -2px rgba(0,0,0,0.05);
+  --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.08), 0 4px 6px -4px rgba(0,0,0,0.04);
+  --shadow-xl: 0 20px 25px -5px rgba(0,0,0,0.08), 0 8px 10px -6px rgba(0,0,0,0.04);
+  --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-base: 200ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-slow: 300ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-spring: 400ms cubic-bezier(0.16, 1, 0.3, 1);
+  --container-sm: 640px;
+  --container-md: 768px;
+  --container-lg: 1024px;
+  --container-xl: 1280px;
 }
 
 @layer base {
-  * { @apply border-border; }
-  body { @apply bg-background text-foreground antialiased; }
-  html { @apply scroll-smooth font-sans; }
+  * { border-color: var(--color-border); }
+  html { scroll-behavior: smooth; -webkit-font-smoothing: antialiased; }
+  body { font-feature-settings: 'cv11', 'ss01'; }
+
+  /* Khmer language mode */
+  html[lang="km"] body,
+  .font-khmer { font-family: var(--font-khmer); line-height: 1.8; }
+  html[lang="km"] h1, html[lang="km"] h2, html[lang="km"] h3 { line-height: 1.5; }
+  html[lang="km"] button, html[lang="km"] input, html[lang="km"] select { line-height: 1.6; }
 }
 
-/* ANIMATIONS */
-@keyframes fadeUp { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
+/* === COMPONENTS === */
+@layer components {
+  .container-page { @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8; }
+
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-[var(--color-primary)] text-white text-sm font-medium rounded-lg;
+    transition: all var(--transition-base);
+  }
+  .btn-primary:hover { @apply bg-[var(--color-primary-light)] shadow-md; transform: translateY(-1px); }
+  .btn-primary:active { transform: translateY(0); }
+
+  .btn-secondary {
+    @apply inline-flex items-center justify-center gap-2 px-5 py-2.5 border border-[var(--color-border)] text-[var(--color-text)] text-sm font-medium rounded-lg bg-white;
+    transition: all var(--transition-base);
+  }
+  .btn-secondary:hover { @apply border-gray-300 shadow-sm bg-gray-50; }
+
+  .input-field {
+    @apply w-full px-4 py-2.5 border border-[var(--color-border)] rounded-lg text-sm bg-white;
+    transition: all var(--transition-fast);
+  }
+  .input-field:focus { @apply outline-none ring-2 ring-[var(--color-primary)]/20 border-[var(--color-primary)]/40; }
+  .input-field::placeholder { @apply text-[var(--color-text-muted)]; }
+
+  .card {
+    @apply bg-white border border-[var(--color-border-light)] rounded-xl overflow-hidden;
+    transition: all var(--transition-slow);
+  }
+  .card:hover { box-shadow: var(--shadow-lg); transform: translateY(-2px); }
+
+  .badge { @apply inline-flex items-center px-2 py-0.5 text-[10px] font-semibold rounded-md; }
+  .badge-success { @apply bg-green-50 text-green-700 border border-green-100; }
+  .badge-danger { @apply bg-red-50 text-red-700 border border-red-100; }
+  .badge-warning { @apply bg-amber-50 text-amber-700 border border-amber-100; }
+  .badge-info { @apply bg-blue-50 text-blue-700 border border-blue-100; }
+}
+
+/* === ANIMATIONS === */
+@keyframes fadeUp { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
 @keyframes fadeIn { from{opacity:0} to{opacity:1} }
-@keyframes scaleIn { from{opacity:0;transform:scale(0.96)} to{opacity:1;transform:scale(1)} }
+@keyframes scaleIn { from{opacity:0;transform:scale(0.97)} to{opacity:1;transform:scale(1)} }
+@keyframes slideDown { from{opacity:0;transform:translateY(-8px)} to{opacity:1;transform:translateY(0)} }
 @keyframes slideLeft { 0%{transform:translateX(0)} 100%{transform:translateX(-50%)} }
-@keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
-@keyframes shimmer { 0%{left:-100%} 100%{left:100%} }
+@keyframes skeleton { 0%{background-position:-200px 0} 100%{background-position:calc(200px + 100%) 0} }
 
-.fade-up { animation: fadeUp 0.6s cubic-bezier(0.22,1,0.36,1) both; }
-.fade-in { animation: fadeIn 0.5s ease both; }
-.scale-in { animation: scaleIn 0.4s cubic-bezier(0.22,1,0.36,1) both; }
-.animate-float { animation: float 5s ease-in-out infinite; }
-.marquee { animation: slideLeft 50s linear infinite; }
-.marquee:hover { animation-play-state: paused; }
+.animate-fade-up { animation: fadeUp 0.5s var(--transition-spring) both; }
+.animate-fade-in { animation: fadeIn 0.4s ease both; }
+.animate-scale-in { animation: scaleIn 0.3s var(--transition-spring) both; }
+.animate-slide-down { animation: slideDown 0.3s var(--transition-spring) both; }
+.animate-marquee { animation: slideLeft 45s linear infinite; }
+.animate-marquee:hover { animation-play-state: paused; }
 
-/* DELAYS */
-.d1{animation-delay:.05s} .d2{animation-delay:.1s} .d3{animation-delay:.15s} .d4{animation-delay:.2s}
-.d5{animation-delay:.25s} .d6{animation-delay:.3s} .d7{animation-delay:.35s} .d8{animation-delay:.4s}
-
-/* PRODUCT CARD */
-.product-card {
-  transition: all 0.3s cubic-bezier(0.22,1,0.36,1);
-}
-.product-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 20px 40px -15px rgba(0,0,0,0.1), 0 0 0 1px rgba(0,0,0,0.03);
-}
-.product-card:hover img { transform: scale(1.05); }
-
-/* SHIMMER ON HOVER */
-.shimmer-hover { position: relative; overflow: hidden; }
-.shimmer-hover::after { content:''; position:absolute; top:0; left:-100%; width:60%; height:100%; background:linear-gradient(90deg,transparent,rgba(255,255,255,0.3),transparent); transition:none; }
-.shimmer-hover:hover::after { animation: shimmer 0.6s ease; }
-
-/* SCROLLBAR */
-::-webkit-scrollbar { width:6px; height:6px; }
-::-webkit-scrollbar-track { background:transparent; }
-::-webkit-scrollbar-thumb { background:#d4d4d8; border-radius:3px; }
-::-webkit-scrollbar-thumb:hover { background:#8b1a1a; }
-
-
-/* Better image display */
-.product-card img {
-  image-rendering: -webkit-optimize-contrast;
-  image-rendering: crisp-edges;
+.skeleton {
+  background: linear-gradient(90deg, #f3f4f6 25%, #e5e7eb 50%, #f3f4f6 75%);
+  background-size: 200px 100%;
+  animation: skeleton 1.5s ease-in-out infinite;
 }
 
-/* Smooth page transitions */
-@keyframes pageIn { from{opacity:0} to{opacity:1} }
-main, section { animation: pageIn 0.3s ease; }
+/* Stagger delays */
+.delay-1{animation-delay:50ms} .delay-2{animation-delay:100ms} .delay-3{animation-delay:150ms}
+.delay-4{animation-delay:200ms} .delay-5{animation-delay:250ms} .delay-6{animation-delay:300ms}
+.delay-7{animation-delay:350ms} .delay-8{animation-delay:400ms}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--color-primary); }

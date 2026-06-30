@@ -4,7 +4,7 @@ import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useState } from 'react'
 import { products } from '@/lib/products-data'
-import { useApp, LangCurrencyToggle } from '@/components/app-context'
+import { useApp } from '@/components/app-context'
 
 export default function ProductDetail() {
   const { id } = useParams()
@@ -51,7 +51,7 @@ SKU: ${product.sku}
           <div className="flex items-center gap-1">
             <Link href="/" className="px-3 py-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors">Home</Link>
             <Link href="/products" className="px-3 py-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors">Products</Link>
-            <LangCurrencyToggle />
+            
           </div>
         </div>
       </nav>
@@ -214,6 +214,7 @@ SKU: ${product.sku}
     </div>
   )
 }
+
 
 
 

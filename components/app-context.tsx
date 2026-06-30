@@ -1,35 +1,52 @@
 ﻿'use client'
 
-import { createContext, useContext, useState, ReactNode } from 'react'
+import { createContext, useContext, useState, useEffect, ReactNode } from 'react'
 
 type Lang = 'en' | 'km'
+type Currency = 'USD' | 'KHR'
 
 interface AppContextType {
   lang: Lang
   setLang: (l: Lang) => void
-  currency: 'USD' | 'KHR'
-  setCurrency: (c: 'USD' | 'KHR') => void
+  currency: Currency
+  setCurrency: (c: Currency) => void
   formatPrice: (usd: number) => string
   t: (en: string, km: string) => string
 }
 
-const KHR_RATE = 4100 // NBC rate
+const KHR_RATE = 4100
 
 const AppContext = createContext<AppContextType>({
   lang: 'en', setLang: () => {}, currency: 'USD', setCurrency: () => {},
-  formatPrice: (usd) => `$${usd.toFixed(2)}`,
-  t: (en) => en,
+  formatPrice: (usd) => `$${usd.toFixed(2)}`, t: (en) => en,
 })
 
 export function AppProvider({ children }: { children: ReactNode }) {
-  const [lang, setLang] = useState<Lang>('en')
-  const [currency, setCurrency] = useState<'USD' | 'KHR'>('USD')
+  const [lang, setLangState] = useState<Lang>('en')
+  const [currency, setCurrencyState] = useState<Currency>('USD')
+
+  useEffect(() => {
+    const saved = localStorage.getItem('vlaser-lang') as Lang
+    const savedCur = localStorage.getItem('vlaser-currency') as Currency
+    if (saved === 'km' || saved === 'en') setLangState(saved)
+    if (savedCur === 'USD' || savedCur === 'KHR') setCurrencyState(savedCur)
+  }, [])
+
+  const setLang = (l: Lang) => {
+    setLangState(l)
+    localStorage.setItem('vlaser-lang', l)
+    document.documentElement.lang = l
+    if (l === 'km') document.body.classList.add('font-khmer')
+    else document.body.classList.remove('font-khmer')
+  }
+
+  const setCurrency = (c: Currency) => {
+    setCurrencyState(c)
+    localStorage.setItem('vlaser-currency', c)
+  }
 
   const formatPrice = (usd: number) => {
-    if (currency === 'KHR') {
-      const khr = Math.round(usd * KHR_RATE)
-      return `${khr.toLocaleString()}៛`
-    }
+    if (currency === 'KHR') return `${Math.round(usd * KHR_RATE).toLocaleString()}៛`
     return `$${usd.toFixed(2)}`
   }
 
@@ -43,26 +60,3 @@ export function AppProvider({ children }: { children: ReactNode }) {
 }
 
 export function useApp() { return useContext(AppContext) }
-
-export function LangCurrencyToggle() {
-  const { lang, setLang, currency, setCurrency } = useApp()
-  return (
-    <div className="flex items-center gap-1">
-      <button
-        onClick={() => setLang(lang === 'en' ? 'km' : 'en')}
-        className="px-2.5 py-1.5 text-[10px] font-bold rounded-lg border border-gray-200 hover:border-primary/50 hover:bg-primary/5 transition-all uppercase tracking-wider"
-        title={lang === 'en' ? 'Switch to Khmer' : 'Switch to English'}
-      >
-        {lang === 'en' ? 'ខ្មែរ' : 'EN'}
-      </button>
-      <button
-        onClick={() => setCurrency(currency === 'USD' ? 'KHR' : 'USD')}
-        className="px-2.5 py-1.5 text-[10px] font-bold rounded-lg border border-gray-200 hover:border-secondary/50 hover:bg-secondary/5 transition-all"
-        title={currency === 'USD' ? 'Switch to Riel' : 'Switch to USD'}
-      >
-        {currency === 'USD' ? '៛ KHR' : '$ USD'}
-      </button>
-    </div>
-  )
-}
-

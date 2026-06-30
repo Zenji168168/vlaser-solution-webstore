@@ -5,7 +5,10 @@ import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import { Suspense } from 'react'
 import { products, CATEGORIES, BRANDS } from '@/lib/products-data'
-import { useApp, LangCurrencyToggle } from '@/components/app-context'
+import { Header } from '@/components/header'
+import { Footer } from '@/components/footer'
+import { ProductCard } from '@/components/product-card'
+import { useApp } from '@/components/app-context'
 
 function ProductsContent() {
   const searchParams = useSearchParams()
@@ -44,7 +47,7 @@ function ProductsContent() {
           </Link>
           <div className="flex items-center gap-1">
             <Link href="/" className="px-3 py-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors rounded-md hover:bg-muted/50">Home</Link>
-            <span className="px-3 py-1.5 text-xs text-primary font-medium">Products</span>`n            <LangCurrencyToggle />
+            <span className="px-3 py-1.5 text-xs text-primary font-medium">Products</span>`n            
           </div>
         </div>
       </nav>
@@ -152,6 +155,8 @@ function ProductsContent() {
 export default function ProductsPage() {
   return (<Suspense fallback={<div className="min-h-screen bg-white flex items-center justify-center"><div className="w-6 h-6 border-2 border-red-900 border-t-transparent rounded-full animate-spin"/></div>}><ProductsContent /></Suspense>)
 }
+
+
 
 
 
