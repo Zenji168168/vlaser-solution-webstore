@@ -1,10 +1,10 @@
-﻿'use client'
+'use client'
 
 import Link from 'next/link'
 import { useApp } from '@/components/app-context'
-import type { Product } from '@/lib/products-data'
+import type { StorefrontProduct } from '@/lib/types/storefront-product'
 
-export function ProductCard({ product }: { product: Product }) {
+export function ProductCard({ product }: { product: StorefrontProduct }) {
   const { formatPrice } = useApp()
 
   return (

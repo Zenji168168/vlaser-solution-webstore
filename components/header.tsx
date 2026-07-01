@@ -1,9 +1,19 @@
-﻿'use client'
+'use client'
 
 import { useState } from 'react'
 import Link from 'next/link'
 import { useApp } from '@/components/app-context'
-import { CATEGORIES } from '@/lib/products-data'
+const HEADER_CATEGORIES = [
+  'Access Control',
+  'Accessories',
+  'Alarm System',
+  'Attendance',
+  'Audio / PA System',
+  'CCTV',
+  'Cabinet',
+  'Network',
+  'Smart Lock',
+]
 
 export function Header() {
   const { lang, setLang, currency, setCurrency, t } = useApp()
@@ -11,7 +21,7 @@ export function Header() {
   const [searchOpen, setSearchOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
 
-  const navCategories = CATEGORIES.filter(c => c !== 'All' && c !== 'Other').slice(0, 6)
+  const navCategories = HEADER_CATEGORIES.slice(0, 6)
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault()

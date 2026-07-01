@@ -1,25 +1,14 @@
-﻿import { neon } from '@neondatabase/serverless'
+import 'server-only'
+import { neon } from '@neondatabase/serverless'
 import { drizzle } from 'drizzle-orm/neon-http'
 import { eq, ilike, or, and, desc, asc, sql, ne, count } from 'drizzle-orm'
 import * as schema from '@/db/schema'
+import type { StorefrontProduct } from '@/lib/types/storefront-product'
 
 function getDb() {
   const url = process.env.DATABASE_URL || process.env.POSTGRES_URL
   if (!url) throw new Error('DATABASE_URL not configured')
   return drizzle(neon(url), { schema })
-}
-
-export interface StorefrontProduct {
-  id: string
-  sku: string
-  name: string
-  description: string
-  price: number
-  brand: string
-  category: string
-  status: string
-  qty: number
-  image: string
 }
 
 interface ProductFilters {
@@ -241,4 +230,86 @@ export async function validateDatabase(): Promise<{ valid: boolean; counts: Reco
   if (counts.brands < 14) issues.push(`Expected ~15 brands, found ${counts.brands}`)
 
   return { valid: issues.length === 0, counts, issues }
+}
+
+export async function getProductsByIds(ids: string[]): Promise<StorefrontProduct[]> {
+  if (!ids.length) return []
+  const db = getDb()
+  // Build IN clause with individual conditions
+  const conditions = ids.map(id => eq(schema.products.publicId, id))
+  const rows = await db.select({
+    id: schema.products.id,
+    publicId: schema.products.publicId,
+    sku: schema.products.sku,
+    nameEn: schema.products.nameEn,
+    descEn: schema.products.descEn,
+    price: schema.products.price,
+    stockQty: schema.products.stockQty,
+    stockStatus: schema.products.stockStatus,
+    brandName: schema.brands.name,
+    categoryName: schema.categories.nameEn,
+  })
+    .from(schema.products)
+    .leftJoin(schema.brands, eq(schema.products.brandId, schema.brands.id))
+    .leftJoin(schema.categories, eq(schema.products.categoryId, schema.categories.id))
+    .where(and(eq(schema.products.published, true), eq(schema.products.archived, false), or(...conditions)!))
+    .limit(10)
+
+  // Get images for these products
+  const internalIds = rows.map(r => r.id)
+  const imageMap = new Map<number, string>()
+  if (internalIds.length > 0) {
+    const images = await db.select({
+      productId: schema.productImages.productId,
+      url: schema.productImages.url,
+    })
+      .from(schema.productImages)
+      .where(and(
+        eq(schema.productImages.isPrimary, true),
+        or(...internalIds.map(iid => eq(schema.productImages.productId, iid)))!
+      ))
+    images.forEach(img => {
+      imageMap.set(img.productId, img.url)
+    })
+  }
+
+  // Preserve caller order
+  const map = new Map(rows.map(r => [r.publicId, r]))
+  return ids.map(id => {
+    const r = map.get(id)
+    if (!r) return null
+    return {
+      id: r.publicId, sku: r.sku, name: r.nameEn || r.sku, description: r.descEn || '',
+      price: parseFloat(r.price) || 0, brand: r.brandName || 'N/A', category: r.categoryName || 'Other',
+      status: r.stockStatus || 'Price List', qty: r.stockQty || 0, image: imageMap.get(r.id) || '/placeholder.svg',
+    } as StorefrontProduct
+  }).filter(Boolean) as StorefrontProduct[]
+}
+
+export async function getCategoryCounts(): Promise<Record<string, number>> {
+  const db = getDb()
+  const rows = await db.select({
+    categoryName: schema.categories.nameEn,
+    count: count(schema.products.id),
+  })
+    .from(schema.products)
+    .innerJoin(schema.categories, eq(schema.products.categoryId, schema.categories.id))
+    .where(and(eq(schema.products.published, true), eq(schema.products.archived, false)))
+    .groupBy(schema.categories.nameEn)
+
+  const counts: Record<string, number> = {}
+  rows.forEach(r => {
+    if (r.categoryName) {
+      counts[r.categoryName] = Number(r.count)
+    }
+  })
+  return counts
+}
+
+export async function getProductCount(): Promise<number> {
+  const db = getDb()
+  const [{ value }] = await db.select({ value: count() })
+    .from(schema.products)
+    .where(and(eq(schema.products.published, true), eq(schema.products.archived, false)))
+  return Number(value)
 }

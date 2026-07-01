@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
@@ -8,7 +8,7 @@ import { Footer } from '@/components/footer'
 import { ProductCard } from '@/components/product-card'
 import { ProductSpecifications } from '@/components/product-specifications'
 import { cleanText, isGenericDescription, parseDescription, addToRecentlyViewed, getRecentlyViewed } from '@/lib/product-utils'
-import { products as staticProducts } from '@/lib/products-data'
+// recently viewed resolved via /api/products/by-ids
 import type { StorefrontProduct } from '@/lib/product-service'
 
 interface Props { product: StorefrontProduct; related: StorefrontProduct[] }
@@ -22,9 +22,27 @@ export function ProductDetailClient({ product, related }: Props) {
 
   useEffect(() => {
     addToRecentlyViewed(product.id)
-    const ids = getRecentlyViewed().filter(rid => rid !== product.id)
-    const recent = ids.map(rid => staticProducts.find(p => p.id === rid)).filter(Boolean).slice(0, 4) as unknown as StorefrontProduct[]
-    setRecentProducts(recent)
+    const ids = getRecentlyViewed().filter(rid => rid !== product.id).slice(0, 4)
+    if (!ids.length) {
+      setRecentProducts([])
+      return
+    }
+    const controller = new AbortController()
+    fetch('/api/products/by-ids', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ids }),
+      signal: controller.signal,
+    })
+      .then(r => {
+        if (!r.ok) throw new Error('Fetch failed')
+        return r.json()
+      })
+      .then(data => {
+        if (data.products) setRecentProducts(data.products)
+      })
+      .catch(() => {})
+    return () => { controller.abort() }
   }, [product.id])
 
   useEffect(() => {
@@ -168,3 +186,4 @@ export function ProductDetailClient({ product, related }: Props) {
     </div>
   )
 }
+

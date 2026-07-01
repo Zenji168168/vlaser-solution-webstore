@@ -1,4 +1,4 @@
-﻿import 'dotenv/config'
+import 'dotenv/config'
 import { neon } from '@neondatabase/serverless'
 import { drizzle } from 'drizzle-orm/neon-http'
 import { categories, brands, products, productImages } from './schema'
@@ -32,8 +32,8 @@ async function main() {
   console.log(`Loaded ${rawProducts.length} products from export`)
 
   // Extract unique categories and brands
-  const uniqueCats = [...new Set(rawProducts.map((p: any) => p.category))].filter(Boolean).sort()
-  const uniqueBrands = [...new Set(rawProducts.map((p: any) => p.brand))].filter(Boolean).sort()
+  const uniqueCats = ([...new Set(rawProducts.map((p: any) => p.category))].filter(Boolean) as string[]).sort()
+  const uniqueBrands = ([...new Set(rawProducts.map((p: any) => p.brand))].filter(Boolean) as string[]).sort()
 
   console.log(`Categories: ${uniqueCats.length}, Brands: ${uniqueBrands.length}`)
 
