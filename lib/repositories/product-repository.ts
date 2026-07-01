@@ -210,13 +210,80 @@ export async function getBrands(): Promise<string[]> {
   return ['All', ...rows.map(r => r.name)]
 }
 
-export async function validateDatabase(): Promise<{ valid: boolean; counts: Record<string, number>; issues: string[] }> {
+export async function validateDatabase(): Promise<{
+  valid: boolean
+  counts: Record<string, number>
+  integrity: Record<string, number>
+  issues: string[]
+}> {
   const db = getDb()
   const issues: string[] = []
   const [prodCount] = await db.select({ value: count() }).from(schema.products)
   const [catCount] = await db.select({ value: count() }).from(schema.categories)
   const [brandCount] = await db.select({ value: count() }).from(schema.brands)
   const [imgCount] = await db.select({ value: count() }).from(schema.productImages)
+
+  // Duplicate public IDs
+  const dupPublicIds = await db.select({
+    publicId: schema.products.publicId,
+    count: count(),
+  })
+    .from(schema.products)
+    .groupBy(schema.products.publicId)
+    .having(sql`count(*) > 1`)
+
+  // Duplicate SKUs
+  const dupSkus = await db.select({
+    sku: schema.products.sku,
+    count: count(),
+  })
+    .from(schema.products)
+    .groupBy(schema.products.sku)
+    .having(sql`count(*) > 1`)
+
+  // Invalid prices
+  const [invalidPrices] = await db.select({ value: count() })
+    .from(schema.products)
+    .where(or(sql`${schema.products.price} IS NULL`, sql`CAST(${schema.products.price} AS numeric) < 0`))
+
+  // Negative stock
+  const [negativeStock] = await db.select({ value: count() })
+    .from(schema.products)
+    .where(sql`${schema.products.stockQty} < 0`)
+
+  // Missing categories
+  const [missingCats] = await db.select({ value: count() })
+    .from(schema.products)
+    .where(sql`${schema.products.categoryId} IS NULL`)
+
+  // Missing brands
+  const [missingBrands] = await db.select({ value: count() })
+    .from(schema.products)
+    .where(sql`${schema.products.brandId} IS NULL`)
+
+  // Orphaned images
+  const [orphanedImages] = await db.select({ value: count() })
+    .from(schema.productImages)
+    .leftJoin(schema.products, eq(schema.productImages.productId, schema.products.id))
+    .where(sql`${schema.products.id} IS NULL`)
+
+  // Products without primary image
+  const [noPrimaryImg] = await db.select({ value: count() })
+    .from(schema.products)
+    .leftJoin(schema.productImages, and(
+      eq(schema.products.id, schema.productImages.productId),
+      eq(schema.productImages.isPrimary, true)
+    ))
+    .where(sql`${schema.productImages.id} IS NULL`)
+
+  // Draft / Unpublished / Archived
+  const [unpublishedCount] = await db.select({ value: count() })
+    .from(schema.products)
+    .where(eq(schema.products.published, false))
+
+  const [archivedCount] = await db.select({ value: count() })
+    .from(schema.products)
+    .where(eq(schema.products.archived, true))
 
   const counts = {
     products: Number(prodCount.value),
@@ -225,11 +292,30 @@ export async function validateDatabase(): Promise<{ valid: boolean; counts: Reco
     images: Number(imgCount.value),
   }
 
+  const integrity = {
+    duplicatePublicIds: dupPublicIds.length,
+    duplicateSkus: dupSkus.length,
+    invalidPrices: Number(invalidPrices.value),
+    negativeStock: Number(negativeStock.value),
+    missingCategories: Number(missingCats.value),
+    missingBrands: Number(missingBrands.value),
+    orphanedImages: Number(orphanedImages.value),
+    noPrimaryImage: Number(noPrimaryImg.value),
+    unpublished: Number(unpublishedCount.value),
+    archived: Number(archivedCount.value),
+  }
+
   if (counts.products < 1380) issues.push(`Expected ~1382 products, found ${counts.products}`)
   if (counts.categories < 9) issues.push(`Expected ~10 categories, found ${counts.categories}`)
   if (counts.brands < 14) issues.push(`Expected ~15 brands, found ${counts.brands}`)
+  if (integrity.duplicatePublicIds > 0) issues.push(`Found ${integrity.duplicatePublicIds} duplicate public IDs`)
+  if (integrity.duplicateSkus > 0) issues.push(`Found ${integrity.duplicateSkus} duplicate SKUs`)
+  if (integrity.invalidPrices > 0) issues.push(`Found ${integrity.invalidPrices} invalid prices`)
+  if (integrity.negativeStock > 0) issues.push(`Found ${integrity.negativeStock} products with negative stock`)
+  if (integrity.orphanedImages > 0) issues.push(`Found ${integrity.orphanedImages} orphaned images`)
+  if (integrity.noPrimaryImage > 0) issues.push(`Found ${integrity.noPrimaryImage} products without a primary image`)
 
-  return { valid: issues.length === 0, counts, issues }
+  return { valid: issues.length === 0, counts, integrity, issues }
 }
 
 export async function getProductsByIds(ids: string[]): Promise<StorefrontProduct[]> {

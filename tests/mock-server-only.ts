@@ -1,5 +1,5 @@
 // Set environment to test to bypass next/cache functions during unit tests
-process.env.NODE_ENV = 'test'
+;(process.env as any).NODE_ENV = 'test'
 
 // Mock server-only module for Node.js test runner
 try {
