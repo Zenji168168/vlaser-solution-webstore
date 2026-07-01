@@ -18,25 +18,20 @@ function cleanText(text: string): string {
   return text.replace(/â€¢/g, '•').replace(/â€™/g, "'").replace(/â€"/g, '—').replace(/â€œ/g, '"').replace(/Ã©/g, 'é').replace(/Â°/g, '°').replace(/ï¿½/g, '').replace(/\uFFFD/g, '').replace(/\s{2,}/g, ' ').trim()
 }
 
-async function main() {
-  const url = process.env.DATABASE_URL || process.env.POSTGRES_URL
-  if (!url) {
-    console.warn('WARNING: DATABASE_URL or POSTGRES_URL is empty. Cannot perform database-mode comparison. Exiting early to prevent execution with empty connection strings.')
-    process.exit(0) // Exit 0 to not fail build if DB connection is intentionally empty in this environment
+export async function runParityComparison(url?: string) {
+  const dbUrl = url || process.env.DATABASE_URL || process.env.POSTGRES_URL
+  if (!dbUrl) {
+    throw new Error('DATABASE_URL or POSTGRES_URL is empty')
   }
 
-  console.log(`Connecting to database to check ${TEST_IDS.length} products...`)
-  const sql = neon(url)
+  const sql = neon(dbUrl)
   const db = drizzle(sql, { schema })
 
-  // 1. Database integrity checks
   const [prodCount] = await db.select({ value: schema.products.id }).from(schema.products).limit(1)
   if (!prodCount) {
-    console.error('ERROR: No products found in the database. Has the database been seeded?')
-    process.exit(1)
+    throw new Error('No products found in the database')
   }
 
-  // 2. Fetch test products from database
   const conditions = TEST_IDS.map(id => eq(schema.products.publicId, id))
   const dbProducts = await db.select({
     id: schema.products.id,
@@ -64,7 +59,6 @@ async function main() {
     .leftJoin(schema.categories, eq(schema.products.categoryId, schema.categories.id))
     .where(or(...conditions)!)
 
-  // Fetch images for these products
   const internalIds = dbProducts.map(p => p.id)
   const imageMap = new Map<number, string>()
   if (internalIds.length > 0) {
@@ -82,26 +76,20 @@ async function main() {
     })
   }
 
-  // Map database products by public_id
   const dbMap = new Map(dbProducts.map(p => [p.publicId, p]))
+  const mismatches: string[] = []
+  const warnings: string[] = []
 
-  let criticalMismatches = 0
-  let warnings = 0
-
-  console.log('\n--- Comparing Product Fields ---')
   for (const id of TEST_IDS) {
     const sProd = staticProducts.find(p => p.id === id)
     const dProd = dbMap.get(id)
 
     if (!sProd) {
-      console.error(`ERROR: Static product ${id} not found in static catalog`)
-      criticalMismatches++
+      mismatches.push(`Product ${id} missing in static catalog`)
       continue
     }
-
     if (!dProd) {
-      console.error(`ERROR: Database product ${id} not found in database`)
-      criticalMismatches++
+      mismatches.push(`Product ${id} missing in database`)
       continue
     }
 
@@ -109,7 +97,6 @@ async function main() {
     const cleanedStaticDesc = cleanText(sProd.description).substring(0, 5000)
     const dbImage = imageMap.get(dProd.id) || ''
 
-    // Compare fields
     const checks = [
       { name: 'SKU', staticVal: sProd.sku, dbVal: dProd.sku, critical: true },
       { name: 'Name', staticVal: cleanedStaticName, dbVal: dProd.nameEn || '', critical: true },
@@ -120,7 +107,6 @@ async function main() {
       { name: 'Brand', staticVal: sProd.brand, dbVal: dProd.brandName || 'N/A', critical: true },
       { name: 'Category', staticVal: sProd.category, dbVal: dProd.categoryName || 'Other', critical: true },
       { name: 'Image', staticVal: sProd.image, dbVal: dbImage, critical: true },
-      // Check database-only fields (should be empty/null for newly seeded products from static)
       { name: 'Model', staticVal: null, dbVal: dProd.model, critical: false },
       { name: 'Khmer Name', staticVal: null, dbVal: dProd.nameKm, critical: false },
       { name: 'Khmer Description', staticVal: null, dbVal: dProd.descKm, critical: false },
@@ -128,44 +114,72 @@ async function main() {
       { name: 'Installation', staticVal: null, dbVal: dProd.installationEn, critical: false },
     ]
 
-    let hasMismatch = false
     for (const check of checks) {
       const match = check.staticVal === null
-        ? (!check.dbVal || check.dbVal === '') // Harmless null/empty difference
+        ? (!check.dbVal || check.dbVal === '')
         : check.staticVal === check.dbVal
 
       if (!match) {
-        hasMismatch = true
+        const msg = `${id} (${check.name}): Static='${check.staticVal}' DB='${check.dbVal}'`
         if (check.critical) {
-          criticalMismatches++
-          console.error(`[CRITICAL] Mismatch on ${id} (${check.name}): Static='${check.staticVal}' DB='${check.dbVal}'`)
+          mismatches.push(msg)
         } else {
-          warnings++
-          console.warn(`[WARNING] Difference on ${id} (${check.name}): Static='${check.staticVal}' DB='${check.dbVal}'`)
+          warnings.push(msg)
         }
       }
     }
-
-    if (!hasMismatch) {
-      console.log(`[OK] Product ${id} matches perfectly.`)
-    }
   }
 
-  console.log('\n--- Verification Summary ---')
-  console.log(`Products compared: ${TEST_IDS.length}`)
-  console.log(`Warnings / Non-critical differences: ${warnings}`)
-  console.log(`Critical Mismatches: ${criticalMismatches}`)
-
-  if (criticalMismatches > 0) {
-    console.error('\nFAIL: Critical mismatches detected between static and database catalogs!')
-    process.exit(1)
+  return {
+    success: mismatches.length === 0,
+    comparedCount: TEST_IDS.length,
+    ids: TEST_IDS,
+    mismatches,
+    warnings
   }
-
-  console.log('\nSUCCESS: Database parity verified successfully!')
-  process.exit(0)
 }
 
-main().catch(err => {
-  console.error('Fatal error during validation:', err)
-  process.exit(1)
-})
+async function main() {
+  const url = process.env.DATABASE_URL || process.env.POSTGRES_URL
+  if (!url) {
+    console.warn('WARNING: DATABASE_URL or POSTGRES_URL is empty. Cannot perform database-mode comparison. Exiting early to prevent execution with empty connection strings.')
+    process.exit(0)
+  }
+
+  console.log(`Connecting to database to check ${TEST_IDS.length} products...`)
+  try {
+    const result = await runParityComparison(url)
+    console.log('\n--- Comparing Product Fields ---')
+    result.ids.forEach(id => {
+      const hasCrit = result.mismatches.some(m => m.startsWith(id))
+      const hasWarn = result.warnings.some(w => w.startsWith(id))
+      if (!hasCrit && !hasWarn) {
+        console.log(`[OK] Product ${id} matches perfectly.`)
+      } else {
+        result.mismatches.filter(m => m.startsWith(id)).forEach(m => console.error(`[CRITICAL] Mismatch on ${m}`))
+        result.warnings.filter(w => w.startsWith(id)).forEach(w => console.warn(`[WARNING] Difference on ${w}`))
+      }
+    })
+
+    console.log('\n--- Verification Summary ---')
+    console.log(`Products compared: ${result.comparedCount}`)
+    console.log(`Warnings / Non-critical differences: ${result.warnings.length}`)
+    console.log(`Critical Mismatches: ${result.mismatches.length}`)
+
+    if (!result.success) {
+      console.error('\nFAIL: Critical mismatches detected between static and database catalogs!')
+      process.exit(1)
+    }
+
+    console.log('\nSUCCESS: Database parity verified successfully!')
+    process.exit(0)
+  } catch (err: any) {
+    console.error('Fatal error during validation:', err.message)
+    process.exit(1)
+  }
+}
+
+// Run CLI if main file
+if (require.main === module || (process.argv[1] && process.argv[1].includes('compare-product-sources'))) {
+  main()
+}
