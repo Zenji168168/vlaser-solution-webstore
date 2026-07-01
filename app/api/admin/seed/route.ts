@@ -11,9 +11,13 @@ function slugify(text: string): string { return text.toLowerCase().replace(/[^a-
 export const maxDuration = 60
 
 export async function GET(request: Request) {
+  if (process.env.VERCEL_ENV === "production") {
+    return new Response("Not Found", { status: 404 });
+  }
+
   const { searchParams } = new URL(request.url)
   const secret = searchParams.get('secret')
-  if (process.env.VERCEL_ENV === 'production' || secret !== process.env.ADMIN_SETUP_SECRET) {
+  if (secret !== process.env.ADMIN_SETUP_SECRET) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 

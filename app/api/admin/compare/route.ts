@@ -2,6 +2,10 @@ import { NextResponse } from 'next/server'
 import { runParityComparison } from '../../../../scripts/compare-product-sources'
 
 export async function POST(request: Request) {
+  if (process.env.VERCEL_ENV === "production") {
+    return new Response("Not Found", { status: 404 });
+  }
+
   const authHeader = request.headers.get('authorization') || ''
   const secretHeader = request.headers.get('x-admin-secret') || ''
 
