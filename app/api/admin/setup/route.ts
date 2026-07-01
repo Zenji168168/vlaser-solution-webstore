@@ -4,7 +4,7 @@ import { neon } from '@neondatabase/serverless'
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url)
   const secret = searchParams.get('secret')
-  if (secret !== 'vlaser-setup-2026') {
+  if (process.env.VERCEL_ENV === 'production' || secret !== process.env.ADMIN_SETUP_SECRET) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
@@ -58,3 +58,4 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
 }
+
