@@ -1,246 +1,66 @@
-﻿'use client'
+﻿import { notFound } from 'next/navigation'
+import { getProductById, getRelatedProducts } from '@/lib/product-service'
+import { ProductDetailClient } from './product-detail-client'
+import type { Metadata } from 'next'
 
-import { useParams } from 'next/navigation'
-import Link from 'next/link'
-import { useState, useEffect } from 'react'
-import { products } from '@/lib/products-data'
-import { useApp } from '@/components/app-context'
-import { Header } from '@/components/header'
-import { Footer } from '@/components/footer'
-import { ProductCard } from '@/components/product-card'
-import { ProductSpecifications } from '@/components/product-specifications'
-import { cleanText, isGenericDescription, parseDescription, getRelatedProducts, addToRecentlyViewed, getRecentlyViewed } from '@/lib/product-utils'
+interface Props { params: Promise<{ id: string }> }
 
-export default function ProductDetail() {
-  const { id } = useParams()
-  const product = products.find(p => p.id === id)
-  const { formatPrice, t, lang } = useApp()
-  const [showConfirm, setShowConfirm] = useState(false)
-  const [qty, setQty] = useState(1)
-  const [fullscreen, setFullscreen] = useState(false)
-  const [recentProducts, setRecentProducts] = useState<typeof products>([])
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { id } = await params
+  const product = await getProductById(id)
+  if (!product) return { title: 'Product Not Found' }
+  return {
+    title: `${product.name} | Vlaser Store`,
+    description: product.description?.substring(0, 160) || `${product.brand} ${product.name} - ${product.category}`,
+    openGraph: {
+      title: product.name,
+      description: product.description?.substring(0, 160) || `${product.brand} ${product.name}`,
+      images: product.image && product.image !== '/placeholder.svg' ? [product.image] : undefined,
+    },
+  }
+}
 
-  // Track recently viewed
-  useEffect(() => {
-    if (!product) return
-    addToRecentlyViewed(product.id)
-    const ids = getRecentlyViewed().filter(rid => rid !== product.id)
-    const recent = ids.map(rid => products.find(p => p.id === rid)).filter(Boolean).slice(0, 4) as typeof products
-    setRecentProducts(recent)
-  }, [product])
+export default async function ProductDetailPage({ params }: Props) {
+  const { id } = await params
+  const product = await getProductById(id)
+  if (!product) notFound()
 
-  // Keyboard: Escape closes fullscreen
-  useEffect(() => {
-    const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') { setFullscreen(false); setShowConfirm(false) } }
-    window.addEventListener('keydown', handler)
-    return () => window.removeEventListener('keydown', handler)
-  }, [])
+  const related = await getRelatedProducts(product.id, product.category, product.brand)
 
-  if (!product) return (
-    <div className="min-h-screen flex flex-col">
-      <Header />
-      <div className="flex-grow flex items-center justify-center flex-col gap-4 py-20">
-        <h1 className="text-xl font-bold text-gray-900">{t('Product Not Found','រកមិនឃើញផលិតផល')}</h1>
-        <Link href="/products" className="btn-primary text-sm">{t('Back to Products','ត្រឡប់ទៅផលិតផល')}</Link>
-      </div>
-      <Footer />
-    </div>
-  )
+  // JSON-LD
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'Product',
+    name: product.name,
+    image: product.image !== '/placeholder.svg' ? product.image : undefined,
+    description: product.description || undefined,
+    sku: product.sku,
+    brand: { '@type': 'Brand', name: product.brand },
+    offers: {
+      '@type': 'Offer',
+      price: product.price.toFixed(2),
+      priceCurrency: 'USD',
+      availability: product.status === 'Out of Stock' ? 'https://schema.org/OutOfStock' : 'https://schema.org/InStock',
+      url: `https://store.vlasersolution.com/products/${product.id}`,
+    },
+  }
 
-  const related = getRelatedProducts(product, products, 4)
-  const desc = parseDescription(product.description)
-  const hasRealDescription = !isGenericDescription(product.description)
-  const productUrl = typeof window !== 'undefined' ? window.location.href : ''
-
-  const handleOrder = () => {
-    const total = (product.price * qty).toFixed(2)
-    const msg = lang === 'km'
-      ? `🛒 សំណើបញ្ជាទិញ\n——————————\nផលិតផល: ${product.name}\nSKU: ${product.sku}\nម៉ាក: ${product.brand}\nចំនួន: ${qty}\nតម្លៃ: $${product.price.toFixed(2)} x ${qty} = $${total}\nURL: ${productUrl}\n——————————\nសូមស្វាគមន៍! ខ្ញុំចង់បញ្ជាទិញផលិតផលនេះ។`
-      : `🛒 Order Request\n——————————\nProduct: ${product.name}\nSKU: ${product.sku}\nBrand: ${product.brand}\nQty: ${qty}\nPrice: $${product.price.toFixed(2)} x ${qty} = $${total}\nURL: ${productUrl}\n——————————\nHi! I would like to order this product.`
-    window.open(`https://t.me/SANGHAMEUK?text=${encodeURIComponent(msg)}`, '_blank')
+  const breadcrumbLd = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://store.vlasersolution.com' },
+      { '@type': 'ListItem', position: 2, name: 'Products', item: 'https://store.vlasersolution.com/products' },
+      { '@type': 'ListItem', position: 3, name: product.category, item: `https://store.vlasersolution.com/products?category=${encodeURIComponent(product.category)}` },
+      { '@type': 'ListItem', position: 4, name: product.name },
+    ],
   }
 
   return (
-    <div className="min-h-screen flex flex-col">
-      <Header />
-
-      <main className="flex-grow">
-        <div className="container-page py-6 sm:py-8">
-          {/* Breadcrumb */}
-          <nav className="flex items-center gap-1.5 text-xs text-gray-500 mb-6">
-            <Link href="/" className="hover:text-gray-900 transition-colors">{t('Home','ទំព័រដើម')}</Link>
-            <span className="text-gray-300">/</span>
-            <Link href="/products" className="hover:text-gray-900 transition-colors">{t('Products','ផលិតផល')}</Link>
-            <span className="text-gray-300">/</span>
-            <Link href={`/products?category=${encodeURIComponent(product.category)}`} className="hover:text-gray-900 transition-colors">{cleanText(product.category)}</Link>
-            <span className="text-gray-300">/</span>
-            <span className="text-gray-700 truncate max-w-[150px]">{product.sku}</span>
-          </nav>
-
-          {/* Product layout */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 mb-16">
-            {/* Image */}
-            <div className="relative">
-              <div
-                className="bg-[var(--color-surface)] border border-[var(--color-border-light)] rounded-2xl overflow-hidden flex items-center justify-center p-6 sm:p-10 aspect-square cursor-zoom-in"
-                onClick={() => setFullscreen(true)}
-              >
-                <img
-                  src={product.image}
-                  alt={cleanText(product.name)}
-                  className="max-w-full max-h-full object-contain transition-transform duration-300 hover:scale-105"
-                  onError={(e) => { (e.target as HTMLImageElement).src = '/placeholder.svg' }}
-                />
-              </div>
-              {/* Status */}
-              <div className="absolute top-4 left-4">
-                {product.status === 'Available' && product.qty > 0 && <span className="badge badge-success">{t('In Stock','មានក្នុងស្តុក')}</span>}
-                {product.status === 'Out of Stock' && <span className="badge badge-danger">{t('Out of Stock','អស់ពីស្តុក')}</span>}
-                {product.status === 'Low Stock' && <span className="badge badge-warning">{t('Low Stock','ស្តុកទាប')}</span>}
-                {product.status === 'Price List' && <span className="badge badge-info">{t('Available','មាន')}</span>}
-              </div>
-            </div>
-
-            {/* Info */}
-            <div className="flex flex-col">
-              <span className="text-xs font-semibold text-[var(--color-primary)] uppercase tracking-wider">{product.brand}</span>
-              <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 mt-2 leading-tight">{cleanText(product.name)}</h1>
-              <div className="flex items-center gap-3 mt-2 text-xs text-gray-500">
-                <span>{cleanText(product.category)}</span>
-                <span>•</span>
-                <span className="font-mono">SKU: {product.sku}</span>
-              </div>
-
-              {/* Price */}
-              <div className="mt-6 pb-6 border-b border-[var(--color-border-light)]">
-                <span className="text-3xl font-bold text-gray-900">{formatPrice(product.price)}</span>
-                {product.qty > 0 && <span className="text-sm text-gray-500 ml-3">{product.qty} {t('available','មាន')}</span>}
-              </div>
-
-              {/* Description */}
-              <div className="mt-6">
-                <h3 className="text-sm font-semibold text-gray-900 mb-2">{t('Description','ការពិពណ៌នា')}</h3>
-                {hasRealDescription ? (
-                  desc.type === 'list' ? (
-                    <ul className="space-y-1.5">
-                      {desc.content.map((item, i) => (
-                        <li key={i} className="flex gap-2 text-sm text-gray-600">
-                          <span className="text-[var(--color-primary)] mt-1 shrink-0">•</span>
-                          <span>{cleanText(item)}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  ) : (
-                    <p className="text-sm text-gray-600 leading-relaxed">{cleanText(desc.content[0] || '')}</p>
-                  )
-                ) : (
-                  <p className="text-sm text-gray-400 italic">
-                    {t('Detailed product information is being updated. Contact our sales team for specifications and availability.',
-                       'ព័ត៌មានលម្អិតរបស់ផលិតផលកំពុងត្រូវបានធ្វើបច្ចុប្បន្នភាព។ សូមទាក់ទងក្រុមការងារផ្នែកលក់របស់យើងសម្រាប់លក្ខណៈបច្ចេកទេស និងស្ថានភាពទំនិញ។')}
-                  </p>
-                )}
-              </div>
-
-              {/* Quantity + Order */}
-              <div className="mt-8 pt-6 border-t border-[var(--color-border-light)]">
-                <div className="flex items-center gap-4 mb-4">
-                  <span className="text-sm text-gray-600">{t('Quantity','ចំនួន')}:</span>
-                  <div className="flex items-center border border-[var(--color-border)] rounded-lg overflow-hidden">
-                    <button onClick={() => setQty(q => Math.max(1, q-1))} className="w-9 h-9 flex items-center justify-center text-gray-600 hover:bg-gray-50 transition-colors text-lg">−</button>
-                    <span className="w-10 h-9 flex items-center justify-center text-sm font-semibold border-x border-[var(--color-border)]">{qty}</span>
-                    <button onClick={() => setQty(q => q+1)} className="w-9 h-9 flex items-center justify-center text-gray-600 hover:bg-gray-50 transition-colors text-lg">+</button>
-                  </div>
-                </div>
-                <div className="flex gap-3">
-                  <button onClick={() => setShowConfirm(true)} className="btn-primary flex-1 py-3 text-sm">
-                    {t('Order Now','បញ្ជាទិញឥឡូវ')}
-                  </button>
-                  <a href={`https://t.me/SANGHAMEUK`} target="_blank" rel="noopener noreferrer" className="btn-secondary py-3 text-sm px-4">
-                    {t('Contact Sales','ទាក់ទងផ្នែកលក់')}
-                  </a>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Specifications */}
-          <div className="mb-16">
-            <ProductSpecifications brand={product.brand} category={product.category} sku={product.sku} status={product.status} qty={product.qty} description={product.description} />
-          </div>
-
-          {/* Related Products */}
-          {related.length > 0 && (
-            <section className="mb-16 pt-8 border-t border-[var(--color-border-light)]">
-              <h2 className="text-lg font-bold text-gray-900 mb-6">{t('Related Products','ផលិតផលទាក់ទង')}</h2>
-              <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-                {related.map(p => <ProductCard key={p.id} product={p} />)}
-              </div>
-            </section>
-          )}
-
-          {/* Recently Viewed */}
-          {recentProducts.length > 0 && (
-            <section className="pt-8 border-t border-[var(--color-border-light)]">
-              <h2 className="text-lg font-bold text-gray-900 mb-6">{t('Recently Viewed','បានមើលថ្មីៗ')}</h2>
-              <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-                {recentProducts.map(p => <ProductCard key={p.id} product={p} />)}
-              </div>
-            </section>
-          )}
-        </div>
-      </main>
-
-      {/* Fullscreen image */}
-      {fullscreen && (
-        <div className="fixed inset-0 z-[100] bg-black/90 flex items-center justify-center p-4" onClick={() => setFullscreen(false)}>
-          <button className="absolute top-4 right-4 w-10 h-10 flex items-center justify-center bg-white/10 hover:bg-white/20 rounded-full text-white transition-colors" aria-label={t('Close','បិទ')}>
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12"/></svg>
-          </button>
-          <img src={product.image} alt={product.name} className="max-w-full max-h-full object-contain" onError={(e) => { (e.target as HTMLImageElement).src = '/placeholder.svg' }} />
-        </div>
-      )}
-
-      {/* Order modal */}
-      {showConfirm && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4" onClick={() => setShowConfirm(false)}>
-          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
-          <div className="relative bg-white rounded-2xl p-6 max-w-sm w-full shadow-xl animate-scale-in" onClick={e => e.stopPropagation()}>
-            <h3 className="text-lg font-bold text-gray-900 mb-4">{t('Confirm Order','បញ្ជាក់ការបញ្ជាទិញ')}</h3>
-            <div className="flex gap-3 p-3 bg-[var(--color-surface)] rounded-xl mb-4">
-              <img src={product.image} alt="" className="w-14 h-14 rounded-lg object-contain bg-white border border-[var(--color-border-light)]" onError={(e) => { (e.target as HTMLImageElement).src = '/placeholder.svg' }} />
-              <div className="min-w-0">
-                <p className="text-xs font-semibold text-[var(--color-primary)]">{product.brand}</p>
-                <p className="text-sm font-medium truncate">{cleanText(product.name)}</p>
-                <p className="text-xs text-gray-500 font-mono">{product.sku}</p>
-              </div>
-            </div>
-            <div className="flex justify-between items-center py-3 border-t border-b border-[var(--color-border-light)] mb-4">
-              <span className="text-sm text-gray-600">{t('Total','សរុប')}: {qty} × {formatPrice(product.price)}</span>
-              <span className="text-lg font-bold text-gray-900">{formatPrice(product.price * qty)}</span>
-            </div>
-            <button onClick={handleOrder} className="w-full btn-primary py-3 text-sm mb-2">
-              ✈️ {t('Send via Telegram','ផ្ញើតាម Telegram')}
-            </button>
-            <button onClick={() => setShowConfirm(false)} className="w-full text-center text-sm text-gray-500 hover:text-gray-700 py-2 transition-colors">
-              {t('Cancel','បោះបង់')}
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* Mobile sticky action */}
-      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-[var(--color-border)] p-3 flex gap-2 lg:hidden z-40 safe-area-bottom">
-        <div className="flex-shrink-0">
-          <span className="text-lg font-bold text-gray-900">{formatPrice(product.price)}</span>
-        </div>
-        <button onClick={() => setShowConfirm(true)} className="btn-primary flex-1 py-2.5 text-sm">
-          {t('Order Now','បញ្ជាទិញ')}
-        </button>
-      </div>
-      {/* Spacer for mobile sticky */}
-      <div className="h-16 lg:hidden" />
-
-      <Footer />
-    </div>
+    <>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbLd) }} />
+      <ProductDetailClient product={product} related={related} />
+    </>
   )
 }
