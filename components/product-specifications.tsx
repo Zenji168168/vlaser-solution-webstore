@@ -21,7 +21,7 @@ const LABELS: Record<string, { en: string; km: string }> = {
 }
 
 export function ProductSpecifications({ brand, category, sku, status, qty, description }: Props) {
-  const { t } = useApp()
+  const { t, lang } = useApp()
 
   const specs = [
     { key: 'brand', value: brand },
@@ -32,15 +32,15 @@ export function ProductSpecifications({ brand, category, sku, status, qty, descr
   ]
 
   return (
-    <div className="border border-[var(--color-border)] rounded-xl overflow-hidden">
+    <div className="surface-panel overflow-hidden">
       <div className="px-4 py-3 bg-[var(--color-surface)] border-b border-[var(--color-border)]">
-        <h3 className="text-sm font-semibold text-gray-900">{t('Specifications', 'លក្ខណៈបច្ចេកទេស')}</h3>
+        <h3 className="text-sm font-black text-gray-950">{t('Specifications', 'លក្ខណៈបច្ចេកទេស')}</h3>
       </div>
       <div className="divide-y divide-[var(--color-border-light)]">
         {specs.map(({ key, value }) => (
           <div key={key} className="flex items-center justify-between px-4 py-3 text-sm">
-            <span className="text-gray-500">{LABELS[key]?.[t('en','km') === 'en' ? 'en' : 'km'] || key}</span>
-            <span className="font-medium text-gray-900 text-right max-w-[60%] truncate">{cleanText(value)}</span>
+            <span className="text-gray-500">{LABELS[key]?.[lang] || key}</span>
+            <span className="font-bold text-gray-950 text-right max-w-[60%] truncate">{cleanText(value)}</span>
           </div>
         ))}
       </div>
