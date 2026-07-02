@@ -1,5 +1,6 @@
 'use client'
 
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useApp } from '@/components/app-context'
 import type { StorefrontProduct } from '@/lib/types/storefront-product'
@@ -14,17 +15,22 @@ function stockLabel(product: StorefrontProduct, t: (en: string, km: string) => s
 export function ProductCard({ product }: { product: StorefrontProduct }) {
   const { formatPrice, t } = useApp()
   const stock = stockLabel(product, t)
+  const [imageSrc, setImageSrc] = useState(product.image || '/placeholder.svg')
+
+  useEffect(() => {
+    setImageSrc(product.image || '/placeholder.svg')
+  }, [product.id, product.image])
 
   return (
     <article className="group h-full min-w-0">
       <Link href={`/products/${product.id}`} className="card flex h-full min-w-0 flex-col focus-ring" aria-label={`${t('View details for', 'មើលព័ត៌មាន')} ${product.name}`}>
         <div className="relative flex aspect-square items-center justify-center overflow-hidden bg-gray-50 p-3 sm:p-4">
           <img
-            src={product.image}
+            src={imageSrc}
             alt={product.name}
             className="max-h-full max-w-full object-contain transition-transform duration-300 ease-[var(--ease-store)] group-hover:scale-[1.035]"
             loading="lazy"
-            onError={(event) => { (event.currentTarget as HTMLImageElement).src = '/placeholder.svg' }}
+            onError={() => { if (imageSrc !== '/placeholder.svg') setImageSrc('/placeholder.svg') }}
           />
           <span className={`badge ${stock.className} absolute left-2 top-2 shadow-sm`}>{stock.text}</span>
         </div>
