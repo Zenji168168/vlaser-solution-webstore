@@ -114,3 +114,19 @@ export const auditLog = pgTable('audit_log', {
   details: text('details'),
   createdAt: timestamp('created_at').defaultNow(),
 })
+
+// === ADMIN USERS ===
+export const adminUsers = pgTable('admin_users', {
+  id: serial('id').primaryKey(),
+  authUserId: varchar('auth_user_id', { length: 150 }).notNull(),
+  email: varchar('email', { length: 320 }).notNull(),
+  displayName: varchar('display_name', { length: 200 }),
+  role: varchar('role', { length: 50 }).notNull().default('admin'),
+  active: boolean('active').notNull().default(false),
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow(),
+}, (table) => [
+  uniqueIndex('idx_admin_users_auth_user_id').on(table.authUserId),
+  uniqueIndex('idx_admin_users_email').on(table.email),
+  index('idx_admin_users_active_role').on(table.active, table.role),
+])
