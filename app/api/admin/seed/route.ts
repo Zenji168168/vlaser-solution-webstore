@@ -91,3 +91,10 @@ export async function GET(request: Request) {
   }
 }
 
+export async function POST() {
+  if (process.env.VERCEL_ENV === "production") {
+    return new Response("Not Found", { status: 404 });
+  }
+
+  return new Response("Method Not Allowed", { status: 405 });
+}

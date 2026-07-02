@@ -3,8 +3,8 @@ import test from 'node:test'
 import assert from 'node:assert/strict'
 import { POST as validateDatabaseRoute } from '../app/api/admin/validate/route'
 import { POST as compareDatabaseRoute } from '../app/api/admin/compare/route'
-import { GET as setupDatabaseRoute } from '../app/api/admin/setup/route'
-import { GET as seedDatabaseRoute } from '../app/api/admin/seed/route'
+import { GET as setupDatabaseRoute, POST as setupDatabasePostRoute } from '../app/api/admin/setup/route'
+import { GET as seedDatabaseRoute, POST as seedDatabasePostRoute } from '../app/api/admin/seed/route'
 
 test('Admin utility routes are hidden in production', async (t) => {
   const originalVercelEnv = process.env.VERCEL_ENV
@@ -35,9 +35,19 @@ test('Admin utility routes are hidden in production', async (t) => {
       handler: setupDatabaseRoute,
     },
     {
+      name: 'setup post',
+      request: new Request('https://store.vlasersolution.com/api/admin/setup', { method: 'POST' }),
+      handler: setupDatabasePostRoute,
+    },
+    {
       name: 'seed',
       request: new Request('https://store.vlasersolution.com/api/admin/seed?secret=anything'),
       handler: seedDatabaseRoute,
+    },
+    {
+      name: 'seed post',
+      request: new Request('https://store.vlasersolution.com/api/admin/seed', { method: 'POST' }),
+      handler: seedDatabasePostRoute,
     },
   ]
 
