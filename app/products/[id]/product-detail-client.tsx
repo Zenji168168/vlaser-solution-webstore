@@ -25,7 +25,7 @@ function getMaxQty(product: StorefrontProduct) {
 function stockBadge(product: StorefrontProduct, t: (en: string, km: string) => string) {
   if (product.status === 'Out of Stock') return { label: t('Out of Stock', 'អស់ពីស្តុក'), className: 'badge-danger' }
   if (product.status === 'Low Stock') return { label: t('Low Stock', 'ស្តុកតិច'), className: 'badge-warning' }
-  if (product.status === 'Available' && product.qty > 0) return { label: t('In Stock', 'មានក្នុងស្តុក'), className: 'badge-success' }
+  if (product.status === 'Available' && product.qty > 0) return { label: t('Available', 'មាន'), className: 'badge-success' }
   return { label: t('Available', 'មាន'), className: 'badge-info' }
 }
 

@@ -3,7 +3,7 @@
 import { FormEvent, useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Menu, MessageCircle, Search, ShoppingBag, X } from 'lucide-react'
+import { Languages, Menu, MessageCircle, Search, ShoppingBag, X } from 'lucide-react'
 import { useApp } from '@/components/app-context'
 
 const HEADER_CATEGORIES = [
@@ -31,7 +31,7 @@ export function Header() {
   const drawerRef = useRef<HTMLDivElement>(null)
   const menuButtonRef = useRef<HTMLButtonElement>(null)
 
-  const navCategories = HEADER_CATEGORIES.slice(0, 6)
+  const navCategories = HEADER_CATEGORIES.slice(0, 4)
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 6)
@@ -104,6 +104,12 @@ export function Header() {
             </Link>
 
             <nav className="hidden xl:flex items-center gap-1" aria-label="Primary categories">
+              <Link
+                href="/products"
+                className={`px-3 py-2 text-sm rounded-xl transition-colors focus-ring ${pathname === '/products' && !activeCategory ? 'bg-[var(--color-primary-lighter)] text-[var(--color-primary)] font-semibold' : 'text-gray-700 hover:text-gray-950 hover:bg-gray-50'}`}
+              >
+                {t('All Products', 'ផលិតផលទាំងអស់')}
+              </Link>
               {navCategories.map(cat => {
                 const active = pathname === '/products' && activeCategory === cat
                 return (
@@ -118,7 +124,7 @@ export function Header() {
               })}
             </nav>
 
-            <form onSubmit={handleSearch} className="hidden lg:block flex-1 max-w-xs">
+            <form onSubmit={handleSearch} className="hidden lg:block flex-1 max-w-[18rem]">
               <label className="sr-only" htmlFor="site-search">{t('Search products', 'ស្វែងរកផលិតផល')}</label>
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-gray-400" aria-hidden="true" />
@@ -147,10 +153,11 @@ export function Header() {
               <button
                 type="button"
                 onClick={() => setLang(lang === 'en' ? 'km' : 'en')}
-                className="tap-target inline-flex items-center justify-center rounded-xl border border-gray-200 px-2.5 text-xs font-bold text-gray-700 hover:border-gray-300 hover:bg-gray-50 focus-ring"
+                className="tap-target inline-flex items-center justify-center gap-1.5 rounded-xl border border-gray-200 px-2.5 text-xs font-bold text-gray-700 hover:border-gray-300 hover:bg-gray-50 focus-ring"
                 title={lang === 'en' ? 'ប្តូរទៅខ្មែរ' : 'Switch to English'}
               >
-                {lang === 'en' ? 'ខ្មែរ' : 'EN'}
+                <Languages className="size-3.5" aria-hidden="true" />
+                <span className="hidden sm:inline">{lang === 'en' ? 'ខ្មែរ' : 'EN'}</span>
               </button>
 
               <button
@@ -159,7 +166,7 @@ export function Header() {
                 className="tap-target hidden sm:inline-flex items-center justify-center rounded-xl border border-gray-200 px-2.5 text-xs font-bold text-gray-700 hover:border-gray-300 hover:bg-gray-50 focus-ring"
                 title={currency === 'USD' ? 'Show KHR' : 'Show USD'}
               >
-                {currency === 'USD' ? '៛' : '$'}
+                {currency === 'USD' ? 'KHR' : 'USD'}
               </button>
 
               <a href={TELEGRAM_URL} target="_blank" rel="noopener noreferrer" className="hidden md:inline-flex btn-secondary h-10 px-3 text-xs">
