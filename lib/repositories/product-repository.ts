@@ -20,6 +20,82 @@ interface ProductFilters {
   perPage?: number
 }
 
+interface ProductStorefrontRow {
+  id?: number
+  publicId: string
+  sku: string
+  nameEn: string | null
+  descEn: string | null
+  price: string
+  stockQty: number | null
+  stockStatus: string | null
+  brandName: string | null
+  categoryName: string | null
+}
+
+interface ProductImageRow {
+  productId: number
+  url: string
+  isPrimary: boolean | null
+  sortOrder: number | null
+  id?: number
+}
+
+export function selectPreferredProductImages(images: ProductImageRow[]): Map<number, string> {
+  const imageMap = new Map<number, string>()
+  const sorted = [...images].sort((a, b) => {
+    if (Boolean(a.isPrimary) !== Boolean(b.isPrimary)) return Number(Boolean(b.isPrimary)) - Number(Boolean(a.isPrimary))
+    if ((a.sortOrder || 0) !== (b.sortOrder || 0)) return (a.sortOrder || 0) - (b.sortOrder || 0)
+    return (a.id || 0) - (b.id || 0)
+  })
+
+  sorted.forEach(image => {
+    if (image.url && !imageMap.has(image.productId)) imageMap.set(image.productId, image.url)
+  })
+
+  return imageMap
+}
+
+export function mapProductRowToStorefront(row: ProductStorefrontRow, imageUrl?: string): StorefrontProduct {
+  return {
+    id: row.publicId,
+    sku: row.sku,
+    name: row.nameEn || row.sku,
+    description: row.descEn || '',
+    price: parseFloat(row.price) || 0,
+    brand: row.brandName || 'N/A',
+    category: row.categoryName || 'Other',
+    status: row.stockStatus || 'Price List',
+    qty: row.stockQty || 0,
+    image: imageUrl || '/placeholder.svg',
+  }
+}
+
+export function prepareRelatedProductRows<T extends ProductStorefrontRow & { id: number }>(
+  rows: T[],
+  currentPublicId: string,
+  limit: number
+): T[] {
+  return rows.filter(row => row.publicId !== currentPublicId).slice(0, limit)
+}
+
+async function getImageMapForProductIds(db: ReturnType<typeof getDb>, productIds: number[]): Promise<Map<number, string>> {
+  if (productIds.length === 0) return new Map()
+
+  const images = await db.select({
+    id: schema.productImages.id,
+    productId: schema.productImages.productId,
+    url: schema.productImages.url,
+    isPrimary: schema.productImages.isPrimary,
+    sortOrder: schema.productImages.sortOrder,
+  })
+    .from(schema.productImages)
+    .where(or(...productIds.map(id => eq(schema.productImages.productId, id)))!)
+    .orderBy(desc(schema.productImages.isPrimary), asc(schema.productImages.sortOrder), asc(schema.productImages.id))
+
+  return selectPreferredProductImages(images)
+}
+
 export async function getPublishedProducts(filters: ProductFilters = {}): Promise<{ products: StorefrontProduct[]; total: number }> {
   const db = getDb()
   const { search, category, brand, sort = 'name', page = 1, perPage = 24 } = filters
@@ -58,6 +134,7 @@ export async function getPublishedProducts(filters: ProductFilters = {}): Promis
 
   // Fetch products with joins
   const rows = await db.select({
+    id: schema.products.id,
     publicId: schema.products.publicId,
     sku: schema.products.sku,
     nameEn: schema.products.nameEn,
@@ -76,39 +153,8 @@ export async function getPublishedProducts(filters: ProductFilters = {}): Promis
     .limit(perPage)
     .offset(offset)
 
-  // Get images for these products
-  const publicIds = rows.map(r => r.publicId)
-  const images = publicIds.length > 0
-    ? await db.select().from(schema.productImages).where(and(eq(schema.productImages.isPrimary, true)))
-    : []
-
-  // Get product IDs to match images
-  const productIdMap = new Map<number, string>()
-  if (publicIds.length > 0) {
-    const prods = await db.select({ id: schema.products.id, publicId: schema.products.publicId }).from(schema.products).where(
-      or(...publicIds.map(pid => eq(schema.products.publicId, pid)))!
-    )
-    prods.forEach(p => productIdMap.set(p.id, p.publicId))
-  }
-
-  const imageMap = new Map<string, string>()
-  images.forEach(img => {
-    const pid = productIdMap.get(img.productId)
-    if (pid && !imageMap.has(pid)) imageMap.set(pid, img.url)
-  })
-
-  const products: StorefrontProduct[] = rows.map(r => ({
-    id: r.publicId,
-    sku: r.sku,
-    name: r.nameEn || r.sku,
-    description: r.descEn || '',
-    price: parseFloat(r.price) || 0,
-    brand: r.brandName || 'N/A',
-    category: r.categoryName || 'Other',
-    status: r.stockStatus || 'Price List',
-    qty: r.stockQty || 0,
-    image: imageMap.get(r.publicId) || '/placeholder.svg',
-  }))
+  const imageMap = await getImageMapForProductIds(db, rows.map(r => r.id))
+  const products = rows.map(r => mapProductRowToStorefront(r, imageMap.get(r.id)))
 
   return { products, total: Number(total) }
 }
@@ -135,26 +181,10 @@ export async function getProductByPublicId(publicId: string): Promise<Storefront
   if (rows.length === 0) return null
   const r = rows[0]
 
-  // Get image
   const prod = await db.select({ id: schema.products.id }).from(schema.products).where(eq(schema.products.publicId, publicId)).limit(1)
-  let imageUrl = '/placeholder.svg'
-  if (prod.length > 0) {
-    const imgs = await db.select().from(schema.productImages).where(and(eq(schema.productImages.productId, prod[0].id), eq(schema.productImages.isPrimary, true))).limit(1)
-    if (imgs.length > 0) imageUrl = imgs[0].url
-  }
+  const imageMap = await getImageMapForProductIds(db, prod.map(p => p.id))
 
-  return {
-    id: r.publicId,
-    sku: r.sku,
-    name: r.nameEn || r.sku,
-    description: r.descEn || '',
-    price: parseFloat(r.price) || 0,
-    brand: r.brandName || 'N/A',
-    category: r.categoryName || 'Other',
-    status: r.stockStatus || 'Price List',
-    qty: r.stockQty || 0,
-    image: imageUrl,
-  }
+  return mapProductRowToStorefront(r, prod[0] ? imageMap.get(prod[0].id) : undefined)
 }
 
 export async function getRelatedProducts(publicId: string, category: string, brand: string, limit = 4): Promise<StorefrontProduct[]> {
@@ -163,6 +193,7 @@ export async function getRelatedProducts(publicId: string, category: string, bra
   if (cat.length === 0) return []
 
   const rows = await db.select({
+    id: schema.products.id,
     publicId: schema.products.publicId,
     sku: schema.products.sku,
     nameEn: schema.products.nameEn,
@@ -182,20 +213,16 @@ export async function getRelatedProducts(publicId: string, category: string, bra
       ne(schema.products.publicId, publicId),
       eq(schema.products.categoryId, cat[0].id),
     ))
+    .orderBy(
+      sql`CASE WHEN ${schema.brands.name} = ${brand} THEN 0 ELSE 1 END`,
+      asc(schema.products.nameEn)
+    )
     .limit(limit)
 
-  return rows.map(r => ({
-    id: r.publicId,
-    sku: r.sku,
-    name: r.nameEn || r.sku,
-    description: r.descEn || '',
-    price: parseFloat(r.price) || 0,
-    brand: r.brandName || 'N/A',
-    category: r.categoryName || 'Other',
-    status: r.stockStatus || 'Price List',
-    qty: r.stockQty || 0,
-    image: '/placeholder.svg',
-  }))
+  const relatedRows = prepareRelatedProductRows(rows, publicId, limit)
+  const imageMap = await getImageMapForProductIds(db, relatedRows.map(r => r.id))
+
+  return relatedRows.map(r => mapProductRowToStorefront(r, imageMap.get(r.id)))
 }
 
 export async function getCategories(): Promise<string[]> {
@@ -341,34 +368,14 @@ export async function getProductsByIds(ids: string[]): Promise<StorefrontProduct
     .where(and(eq(schema.products.published, true), eq(schema.products.archived, false), or(...conditions)!))
     .limit(10)
 
-  // Get images for these products
-  const internalIds = rows.map(r => r.id)
-  const imageMap = new Map<number, string>()
-  if (internalIds.length > 0) {
-    const images = await db.select({
-      productId: schema.productImages.productId,
-      url: schema.productImages.url,
-    })
-      .from(schema.productImages)
-      .where(and(
-        eq(schema.productImages.isPrimary, true),
-        or(...internalIds.map(iid => eq(schema.productImages.productId, iid)))!
-      ))
-    images.forEach(img => {
-      imageMap.set(img.productId, img.url)
-    })
-  }
+  const imageMap = await getImageMapForProductIds(db, rows.map(r => r.id))
 
   // Preserve caller order
   const map = new Map(rows.map(r => [r.publicId, r]))
   return ids.map(id => {
     const r = map.get(id)
     if (!r) return null
-    return {
-      id: r.publicId, sku: r.sku, name: r.nameEn || r.sku, description: r.descEn || '',
-      price: parseFloat(r.price) || 0, brand: r.brandName || 'N/A', category: r.categoryName || 'Other',
-      status: r.stockStatus || 'Price List', qty: r.stockQty || 0, image: imageMap.get(r.id) || '/placeholder.svg',
-    } as StorefrontProduct
+    return mapProductRowToStorefront(r, imageMap.get(r.id))
   }).filter(Boolean) as StorefrontProduct[]
 }
 
