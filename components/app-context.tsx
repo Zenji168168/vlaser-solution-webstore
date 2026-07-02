@@ -32,12 +32,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
     if (savedCur === 'USD' || savedCur === 'KHR') setCurrencyState(savedCur)
   }, [])
 
+  useEffect(() => {
+    document.documentElement.lang = lang
+    document.body.classList.toggle('font-khmer', lang === 'km')
+  }, [lang])
+
   const setLang = (l: Lang) => {
     setLangState(l)
     localStorage.setItem('vlaser-lang', l)
-    document.documentElement.lang = l
-    if (l === 'km') document.body.classList.add('font-khmer')
-    else document.body.classList.remove('font-khmer')
   }
 
   const setCurrency = (c: Currency) => {

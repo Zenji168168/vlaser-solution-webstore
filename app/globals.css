@@ -6,6 +6,7 @@
   --font-khmer: var(--font-khmer), 'Noto Sans Khmer', sans-serif;
   --color-primary: #7f1d1d;
   --color-primary-light: #991b1b;
+  --color-primary-dark: #5f1515;
   --color-primary-lighter: #fef2f2;
   --color-secondary: #78350f;
   --color-accent: #0e7490;
@@ -19,6 +20,7 @@
   --color-text: #111827;
   --color-text-secondary: #4b5563;
   --color-text-muted: #9ca3af;
+  --ease-store: cubic-bezier(0.22, 1, 0.36, 1);
   --radius-sm: 0.375rem;
   --radius-md: 0.5rem;
   --radius-lg: 0.75rem;
@@ -28,10 +30,10 @@
   --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.07), 0 2px 4px -2px rgba(0,0,0,0.05);
   --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.08), 0 4px 6px -4px rgba(0,0,0,0.04);
   --shadow-xl: 0 20px 25px -5px rgba(0,0,0,0.08), 0 8px 10px -6px rgba(0,0,0,0.04);
-  --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
-  --transition-base: 200ms cubic-bezier(0.4, 0, 0.2, 1);
-  --transition-slow: 300ms cubic-bezier(0.4, 0, 0.2, 1);
-  --transition-spring: 400ms cubic-bezier(0.16, 1, 0.3, 1);
+  --transition-fast: 160ms var(--ease-store);
+  --transition-base: 220ms var(--ease-store);
+  --transition-slow: 320ms var(--ease-store);
+  --transition-spring: 400ms var(--ease-store);
   --container-sm: 640px;
   --container-md: 768px;
   --container-lg: 1024px;
@@ -41,7 +43,8 @@
 @layer base {
   * { border-color: var(--color-border); }
   html { scroll-behavior: smooth; -webkit-font-smoothing: antialiased; }
-  body { font-feature-settings: 'cv11', 'ss01'; }
+  body { font-feature-settings: 'cv11', 'ss01'; overflow-x: hidden; }
+  :focus-visible { outline: 2px solid color-mix(in srgb, var(--color-primary) 70%, white); outline-offset: 3px; }
 
   /* Khmer language mode */
   html[lang="km"] body,
@@ -55,36 +58,43 @@
   .container-page { @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8; }
 
   .btn-primary {
-    @apply inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-[var(--color-primary)] text-white text-sm font-medium rounded-lg;
+    @apply inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-[var(--color-primary)] text-white text-sm font-semibold rounded-xl select-none disabled:opacity-50 disabled:pointer-events-none;
     transition: all var(--transition-base);
   }
   .btn-primary:hover { @apply bg-[var(--color-primary-light)] shadow-md; transform: translateY(-1px); }
-  .btn-primary:active { transform: translateY(0); }
+  .btn-primary:active { transform: translateY(0) scale(0.98); }
 
   .btn-secondary {
-    @apply inline-flex items-center justify-center gap-2 px-5 py-2.5 border border-[var(--color-border)] text-[var(--color-text)] text-sm font-medium rounded-lg bg-white;
+    @apply inline-flex items-center justify-center gap-2 px-5 py-2.5 border border-[var(--color-border)] text-[var(--color-text)] text-sm font-semibold rounded-xl bg-white select-none disabled:opacity-50 disabled:pointer-events-none;
     transition: all var(--transition-base);
   }
   .btn-secondary:hover { @apply border-gray-300 shadow-sm bg-gray-50; }
+  .btn-secondary:active { transform: scale(0.98); }
 
   .input-field {
-    @apply w-full px-4 py-2.5 border border-[var(--color-border)] rounded-lg text-sm bg-white;
+    @apply w-full px-4 py-2.5 border border-[var(--color-border)] rounded-xl text-sm bg-white;
     transition: all var(--transition-fast);
   }
   .input-field:focus { @apply outline-none ring-2 ring-[var(--color-primary)]/20 border-[var(--color-primary)]/40; }
   .input-field::placeholder { @apply text-[var(--color-text-muted)]; }
 
   .card {
-    @apply bg-white border border-[var(--color-border-light)] rounded-xl overflow-hidden;
+    @apply bg-white border border-[var(--color-border-light)] rounded-2xl overflow-hidden;
     transition: all var(--transition-slow);
   }
-  .card:hover { box-shadow: var(--shadow-lg); transform: translateY(-2px); }
+  .card:hover { box-shadow: var(--shadow-lg); transform: translateY(-3px); }
 
-  .badge { @apply inline-flex items-center px-2 py-0.5 text-[10px] font-semibold rounded-md; }
+  .badge { @apply inline-flex items-center px-2.5 py-0.5 text-[10px] font-semibold rounded-lg; }
   .badge-success { @apply bg-green-50 text-green-700 border border-green-100; }
   .badge-danger { @apply bg-red-50 text-red-700 border border-red-100; }
   .badge-warning { @apply bg-amber-50 text-amber-700 border border-amber-100; }
   .badge-info { @apply bg-blue-50 text-blue-700 border border-blue-100; }
+
+  .surface-panel { @apply bg-white border border-[var(--color-border-light)] rounded-2xl shadow-sm; }
+  .focus-ring { @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)]/30 focus-visible:ring-offset-2; }
+  .tap-target { min-height: 44px; min-width: 44px; }
+  .no-scrollbar { scrollbar-width: none; }
+  .no-scrollbar::-webkit-scrollbar { display: none; }
 }
 
 /* === ANIMATIONS === */
@@ -92,6 +102,8 @@
 @keyframes fadeIn { from{opacity:0} to{opacity:1} }
 @keyframes scaleIn { from{opacity:0;transform:scale(0.97)} to{opacity:1;transform:scale(1)} }
 @keyframes slideDown { from{opacity:0;transform:translateY(-8px)} to{opacity:1;transform:translateY(0)} }
+@keyframes drawerIn { from{opacity:0;transform:translateX(18px)} to{opacity:1;transform:translateX(0)} }
+@keyframes sheetIn { from{opacity:0;transform:translateY(18px)} to{opacity:1;transform:translateY(0)} }
 @keyframes slideLeft { 0%{transform:translateX(0)} 100%{transform:translateX(-50%)} }
 @keyframes skeleton { 0%{background-position:-200px 0} 100%{background-position:calc(200px + 100%) 0} }
 
@@ -99,6 +111,8 @@
 .animate-fade-in { animation: fadeIn 0.4s ease both; }
 .animate-scale-in { animation: scaleIn 0.3s var(--transition-spring) both; }
 .animate-slide-down { animation: slideDown 0.3s var(--transition-spring) both; }
+.animate-drawer-in { animation: drawerIn 0.32s var(--ease-store) both; }
+.animate-sheet-in { animation: sheetIn 0.32s var(--ease-store) both; }
 .animate-marquee { animation: slideLeft 45s linear infinite; }
 .animate-marquee:hover { animation-play-state: paused; }
 
@@ -115,7 +129,8 @@
 
 /* Reduced motion */
 @media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+  html { scroll-behavior: auto; }
+  *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
 }
 
 /* Scrollbar */
