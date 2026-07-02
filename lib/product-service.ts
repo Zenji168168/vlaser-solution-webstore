@@ -19,6 +19,7 @@ export interface PaginatedProducts {
 const DATA_SOURCE = process.env.PRODUCT_DATA_SOURCE || 'static'
 const MAX_PAGE_SIZE = 48
 const DEFAULT_PAGE_SIZE = 24
+const STOREFRONT_IMAGE_CACHE_VERSION = 'storefront-images-v2'
 
 function normalize(opts: ProductQueryOptions): ProductQueryOptions {
   return {
@@ -162,7 +163,7 @@ const cachedGetProducts = unstable_cache(
     }
     return staticGetProducts(opts)
   },
-  ['products-list'],
+  ['products-list', STOREFRONT_IMAGE_CACHE_VERSION],
   { tags: [CACHE_TAGS.products] }
 )
 
@@ -265,7 +266,7 @@ export async function getProductById(publicId: string): Promise<StorefrontProduc
         }
         return product
       },
-      ['product', publicId],
+      ['product', publicId, STOREFRONT_IMAGE_CACHE_VERSION],
       { tags: [CACHE_TAGS.product(publicId), CACHE_TAGS.products] }
     )
     productCacheMap.set(publicId, cachedFn)
@@ -296,7 +297,7 @@ export async function getRelatedProducts(publicId: string, category: string, bra
         }
         return staticGetRelated(pid, cat, br)
       },
-      ['related', publicId, category, brand, String(limit)],
+      ['related', publicId, category, brand, String(limit), STOREFRONT_IMAGE_CACHE_VERSION],
       { tags: [CACHE_TAGS.related(publicId)] }
     )
     relatedCacheMap.set(cacheKey, cachedFn)
@@ -375,7 +376,7 @@ export async function getProductsByIds(ids: string[]): Promise<StorefrontProduct
         const { products } = await import('@/lib/products-data')
         return batchIds.map(id => products.find(p => p.id === id)).filter(Boolean) as unknown as StorefrontProduct[]
       },
-      ['products-by-ids', cacheKey],
+      ['products-by-ids', cacheKey, STOREFRONT_IMAGE_CACHE_VERSION],
       { tags: [CACHE_TAGS.productsByIds] }
     )
     batchCacheMap.set(cacheKey, cachedFn)
