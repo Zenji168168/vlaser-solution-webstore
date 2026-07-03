@@ -80,6 +80,25 @@ async function verifyMigration() {
   }
 }
 
+async function verifyAuthSync() {
+  const sql = getSql()
+  const [table] = await sql`
+    select exists (
+      select 1 from information_schema.tables
+      where table_schema = 'neon_auth' and table_name = 'users_sync'
+    ) as exists
+  `
+  if (!table?.exists) return { exists: false, columns: [] as string[] }
+
+  const columns = await sql`
+    select column_name
+    from information_schema.columns
+    where table_schema = 'neon_auth' and table_name = 'users_sync'
+    order by ordinal_position
+  `
+  return { exists: true, columns: columns.map(column => column.column_name) }
+}
+
 async function approveAdmin(email: string) {
   const normalized = normalizeAdminEmail(email)
   if (!isValidAdminEmail(normalized)) {
@@ -87,6 +106,11 @@ async function approveAdmin(email: string) {
   }
 
   const sql = getSql()
+  const authSync = await verifyAuthSync()
+  if (!authSync.exists) {
+    return { status: 409, body: { error: 'Neon Auth user sync table is not available.' } }
+  }
+
   const users = await sql`
     select id, email, name
     from neon_auth.users_sync
@@ -136,7 +160,7 @@ export async function POST(request: Request) {
     }
 
     if (action === 'verify') {
-      return Response.json({ ok: true, verification: await verifyMigration() })
+      return Response.json({ ok: true, verification: await verifyMigration(), authSync: await verifyAuthSync() })
     }
 
     if (action === 'approve-admin') {
@@ -146,6 +170,6 @@ export async function POST(request: Request) {
 
     return Response.json({ error: 'Unsupported action.' }, { status: 400 })
   } catch {
-    return Response.json({ error: 'Admin foundation setup failed.' }, { status: 500 })
+    return Response.json({ error: 'Admin foundation setup failed.', code: 'setup_failed' }, { status: 500 })
   }
 }
