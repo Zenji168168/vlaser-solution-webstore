@@ -136,6 +136,31 @@ export async function getAdminUserByAuthIdentity(authUserId: string, email: stri
   return rows[0] || null
 }
 
+export async function syncAdminUserAuthIdentity(authUserId: string, email: string, displayName?: string | null): Promise<AdminUser | null> {
+  const db = getDb()
+  const normalizedEmail = email.toLowerCase()
+  const rows = await db.update(schema.adminUsers)
+    .set({
+      authUserId,
+      displayName: displayName || undefined,
+      updatedAt: new Date(),
+    })
+    .where(and(
+      eq(schema.adminUsers.email, normalizedEmail),
+      eq(schema.adminUsers.role, 'admin'),
+      eq(schema.adminUsers.active, true),
+    ))
+    .returning({
+      authUserId: schema.adminUsers.authUserId,
+      email: schema.adminUsers.email,
+      displayName: schema.adminUsers.displayName,
+      role: schema.adminUsers.role,
+      active: schema.adminUsers.active,
+    })
+
+  return rows[0] || null
+}
+
 function buildProductConditions(filters: Required<AdminProductFilters>): SQL[] {
   const conditions: SQL[] = []
 

@@ -133,3 +133,25 @@ test('temporary foundation setup route blocks production and requires authorizat
   assert.match(source, /headers\.get\('authorization'\)/)
   assert.doesNotMatch(source, /searchParams|get\('secret'\)|nextUrl\.search/)
 })
+
+test('admin login offers Google OAuth without public sign-up', () => {
+  const loginPage = readFileSync('app/admin/login/page.tsx', 'utf8')
+  const googleButton = readFileSync('app/admin/login/google-sign-in-button.tsx', 'utf8')
+
+  assert.match(googleButton, /signIn\.social/)
+  assert.match(googleButton, /provider: 'google'/)
+  assert.match(googleButton, /callbackURL: '\/admin'/)
+  assert.match(googleButton, /errorCallbackURL: '\/admin\/login\?error=oauth'/)
+  assert.match(loginPage, /or sign in with email/)
+  assert.doesNotMatch(loginPage + googleButton, /signUp|Create account/)
+})
+
+test('approved admin session can relink auth user id server-side', () => {
+  const authSource = readFileSync('lib/admin/auth.ts', 'utf8')
+  const repoSource = readFileSync('lib/admin/repository.ts', 'utf8')
+
+  assert.match(authSource, /syncAdminUserAuthIdentity/)
+  assert.match(repoSource, /eq\(schema\.adminUsers\.email, normalizedEmail\)/)
+  assert.match(repoSource, /eq\(schema\.adminUsers\.role, 'admin'\)/)
+  assert.match(repoSource, /eq\(schema\.adminUsers\.active, true\)/)
+})

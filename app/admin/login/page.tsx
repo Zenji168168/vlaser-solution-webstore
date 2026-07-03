@@ -1,12 +1,17 @@
 import { redirect } from 'next/navigation'
 import { ShieldCheck } from 'lucide-react'
 import { AdminLoginForm } from './login-form'
-import { SetupPasswordForm } from './setup-password-form'
+import { GoogleSignInButton } from './google-sign-in-button'
 import { getCurrentAdminAccess } from '@/lib/admin/auth'
 
 export const dynamic = 'force-dynamic'
 
-export default async function AdminLoginPage() {
+interface Props {
+  searchParams: Promise<Record<string, string | undefined>>
+}
+
+export default async function AdminLoginPage({ searchParams }: Props) {
+  const params = await searchParams
   const access = await getCurrentAdminAccess()
   if (access.status === 'granted') redirect('/admin')
 
@@ -23,8 +28,18 @@ export default async function AdminLoginPage() {
               Sign in with an approved administrator account. Access is verified on the server.
             </p>
           </div>
+          {params.error === 'oauth' && (
+            <p className="mb-4 rounded-lg border border-red-100 bg-red-50 px-3 py-2 text-sm font-medium text-red-700" role="alert">
+              Google sign-in did not complete. Try again with the approved administrator email.
+            </p>
+          )}
+          <GoogleSignInButton />
+          <div className="my-5 flex items-center gap-3">
+            <div className="h-px flex-1 bg-slate-200" />
+            <span className="text-xs font-bold uppercase tracking-wide text-slate-500">or sign in with email</span>
+            <div className="h-px flex-1 bg-slate-200" />
+          </div>
           <AdminLoginForm />
-          <SetupPasswordForm />
           {access.status === 'denied' && (
             <p className="mt-4 rounded-lg border border-amber-100 bg-amber-50 px-3 py-2 text-sm font-medium text-amber-800">
               Your account is signed in but is not approved for admin access.

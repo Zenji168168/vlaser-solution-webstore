@@ -1,5 +1,4 @@
 import { Pool, neon } from '@neondatabase/serverless'
-import { randomUUID } from 'node:crypto'
 import {
   ADMIN_FOUNDATION_CONSTRAINT_SQL,
   ADMIN_FOUNDATION_INDEX_SQL,
@@ -205,78 +204,9 @@ async function approveAdmin(email: string) {
   }
 }
 
-function getApprovedOnboardingEmail() {
-  return normalizeAdminEmail(process.env.ADMIN_ONBOARDING_EMAIL || '')
-}
-
-async function ensureApprovedAuthUser(email: string, origin: string) {
-  const normalized = normalizeAdminEmail(email)
-  if (!getApprovedOnboardingEmail() || normalized !== getApprovedOnboardingEmail()) {
-    return { status: 403, body: { error: 'Email is not approved for onboarding.' } }
-  }
-  if (!isValidAdminEmail(normalized)) {
-    return { status: 400, body: { error: 'Invalid email.' } }
-  }
-
-  const sql = getSql()
-  const existing = await sql`
-    select id, email, name
-    from neon_auth.user
-    where lower(email) = ${normalized}
-    limit 1
-  `
-  let user = existing[0]
-
-  if (!user) {
-    const authUserId = randomUUID()
-    const [created] = await sql`
-      insert into neon_auth.user (id, name, email, "emailVerified", "createdAt", "updatedAt")
-      values (${authUserId}, 'Vlaser Administrator', ${normalized}, false, now(), now())
-      returning id, email, name
-    `
-    user = created
-  }
-
-  await sql`
-    insert into public.admin_users (auth_user_id, email, display_name, role, active, created_at, updated_at)
-    values (${user.id}, ${normalized}, ${user.name || 'Vlaser Administrator'}, 'admin', true, now(), now())
-    on conflict (email) do update set
-      auth_user_id = excluded.auth_user_id,
-      display_name = coalesce(excluded.display_name, public.admin_users.display_name),
-      role = 'admin',
-      active = true,
-      updated_at = now()
-  `
-
-  const resetResponse = await fetch(new URL('/api/auth/request-password-reset', origin), {
-    method: 'POST',
-    headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({
-      email: normalized,
-      redirectTo: `${origin}/admin/login`,
-    }),
-  })
-
-  if (!resetResponse.ok) {
-    return { status: 502, body: { error: 'Password setup email could not be sent.', code: 'password_setup_email_failed' } }
-  }
-
-  return {
-    status: 200,
-    body: {
-      ok: true,
-      email: normalized,
-      userCreated: existing.length === 0,
-      adminLinked: true,
-      passwordSetupEmailSent: true,
-    },
-  }
-}
-
 export async function POST(request: Request) {
   if (process.env.VERCEL_ENV === 'production') return notFound()
   if (!isAuthorized(request)) return new Response('Unauthorized', { status: 401 })
-  const requestOrigin = new URL(request.url).origin
 
   try {
     const body = await request.json().catch(() => ({}))
@@ -299,15 +229,6 @@ export async function POST(request: Request) {
     if (action === 'approve-admin') {
       const result = await approveAdmin(String(body?.email || ''))
       return Response.json(result.body, { status: result.status })
-    }
-
-    if (action === 'onboard-approved-admin') {
-      try {
-        const result = await ensureApprovedAuthUser(String(body?.email || ''), requestOrigin)
-        return Response.json(result.body, { status: result.status })
-      } catch {
-        return Response.json({ error: 'Admin onboarding failed.', code: 'onboarding_failed' }, { status: 500 })
-      }
     }
 
     return Response.json({ error: 'Unsupported action.' }, { status: 400 })

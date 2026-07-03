@@ -2,7 +2,7 @@ import 'server-only'
 import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 import { auth } from '@/lib/auth/server'
-import { getAdminUserByAuthIdentity, type AdminUser } from '@/lib/admin/repository'
+import { getAdminUserByAuthIdentity, syncAdminUserAuthIdentity, type AdminUser } from '@/lib/admin/repository'
 
 export type AdminAccess =
   | { status: 'unauthenticated'; session: null; admin: null }
@@ -43,7 +43,10 @@ export async function getCurrentAdminAccess(): Promise<AdminAccess> {
   const session = asAdminSession(data)
   if (!session) return evaluateAdminAccess(null, null)
 
-  const admin = await getAdminUserByAuthIdentity(session.user.id, session.user.email)
+  let admin = await getAdminUserByAuthIdentity(session.user.id, session.user.email)
+  if (admin?.active && admin.role === 'admin' && admin.authUserId !== session.user.id) {
+    admin = await syncAdminUserAuthIdentity(session.user.id, session.user.email, session.user.name) || admin
+  }
   return evaluateAdminAccess(session, admin)
 }
 
