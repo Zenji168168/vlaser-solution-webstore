@@ -1,4 +1,5 @@
 import { Pool, neon } from '@neondatabase/serverless'
+import { randomUUID } from 'node:crypto'
 import {
   ADMIN_FOUNDATION_CONSTRAINT_SQL,
   ADMIN_FOUNDATION_INDEX_SQL,
@@ -227,9 +228,10 @@ async function ensureApprovedAuthUser(email: string, origin: string) {
   let user = existing[0]
 
   if (!user) {
+    const authUserId = randomUUID()
     const [created] = await sql`
       insert into neon_auth.user (id, name, email, "emailVerified", "createdAt", "updatedAt")
-      values (gen_random_uuid()::text, 'Vlaser Administrator', ${normalized}, false, now(), now())
+      values (${authUserId}, 'Vlaser Administrator', ${normalized}, false, now(), now())
       returning id, email, name
     `
     user = created
@@ -256,7 +258,7 @@ async function ensureApprovedAuthUser(email: string, origin: string) {
   })
 
   if (!resetResponse.ok) {
-    return { status: 502, body: { error: 'Password setup email could not be sent.' } }
+    return { status: 502, body: { error: 'Password setup email could not be sent.', code: 'password_setup_email_failed' } }
   }
 
   return {
@@ -300,8 +302,12 @@ export async function POST(request: Request) {
     }
 
     if (action === 'onboard-approved-admin') {
-      const result = await ensureApprovedAuthUser(String(body?.email || ''), requestOrigin)
-      return Response.json(result.body, { status: result.status })
+      try {
+        const result = await ensureApprovedAuthUser(String(body?.email || ''), requestOrigin)
+        return Response.json(result.body, { status: result.status })
+      } catch {
+        return Response.json({ error: 'Admin onboarding failed.', code: 'onboarding_failed' }, { status: 500 })
+      }
     }
 
     return Response.json({ error: 'Unsupported action.' }, { status: 400 })
