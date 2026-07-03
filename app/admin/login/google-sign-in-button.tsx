@@ -1,26 +1,67 @@
 'use client'
 
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { Loader2 } from 'lucide-react'
 import { authClient } from '@/lib/auth/client'
+
+const GOOGLE_SIGN_IN_TIMEOUT_MS = 15_000
+const GOOGLE_SIGN_IN_ERROR = 'Google sign-in could not start. Please try again.'
+
+function getOAuthUrl(result: unknown) {
+  const data = (result as { data?: { url?: unknown } } | null)?.data
+  if (typeof data?.url !== 'string') return null
+  try {
+    const url = new URL(data.url)
+    return url.protocol === 'https:' ? url.toString() : null
+  } catch {
+    return null
+  }
+}
 
 export function GoogleSignInButton() {
   const [pending, setPending] = useState(false)
   const [error, setError] = useState('')
+  const attemptRef = useRef(0)
 
   const signInWithGoogle = async () => {
+    const attempt = attemptRef.current + 1
+    attemptRef.current = attempt
+    let navigating = false
     setPending(true)
     setError('')
-    const origin = window.location.origin
-    const { error } = await authClient.signIn.social({
-      provider: 'google',
-      callbackURL: `${origin}/admin`,
-      errorCallbackURL: `${origin}/admin/login?error=oauth`,
-    })
 
-    if (error) {
+    const timeout = window.setTimeout(() => {
+      if (attemptRef.current !== attempt || navigating) return
       setPending(false)
-      setError('Google sign-in could not start. Try again.')
+      setError(GOOGLE_SIGN_IN_ERROR)
+    }, GOOGLE_SIGN_IN_TIMEOUT_MS)
+
+    try {
+      const result = await authClient.signIn.social({
+        provider: 'google',
+        callbackURL: `${window.location.origin}/admin`,
+        errorCallbackURL: `${window.location.origin}/admin/login?error=oauth`,
+      })
+      const oauthUrl = getOAuthUrl(result)
+
+      if (oauthUrl) {
+        navigating = true
+        window.location.assign(oauthUrl)
+        return
+      }
+
+      if (result?.error && attemptRef.current === attempt) {
+        setError(GOOGLE_SIGN_IN_ERROR)
+      }
+    } catch {
+      if (attemptRef.current === attempt) {
+        setError(GOOGLE_SIGN_IN_ERROR)
+      }
+    } finally {
+      window.clearTimeout(timeout)
+      if (!navigating && attemptRef.current === attempt) {
+        setPending(false)
+      }
     }
   }
 
