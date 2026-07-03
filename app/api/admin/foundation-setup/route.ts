@@ -99,6 +99,17 @@ async function verifyAuthSync() {
   return { exists: true, columns: columns.map(column => column.column_name) }
 }
 
+async function verifyAuthUserTable() {
+  const sql = getSql()
+  const [table] = await sql`
+    select exists (
+      select 1 from information_schema.tables
+      where table_schema = 'neon_auth' and table_name = 'user'
+    ) as exists
+  `
+  return Boolean(table?.exists)
+}
+
 async function inspectAuthStorage() {
   const sql = getSql()
   const schemas = await sql`
@@ -139,9 +150,9 @@ async function approveAdmin(email: string) {
   }
 
   const sql = getSql()
-  const authSync = await verifyAuthSync()
-  if (!authSync.exists) {
-    return { status: 409, body: { error: 'Neon Auth user sync table is not available.' } }
+  const authUserTableExists = await verifyAuthUserTable()
+  if (!authUserTableExists) {
+    return { status: 409, body: { error: 'Neon Auth user table is not available.' } }
   }
 
   const users = await sql`
