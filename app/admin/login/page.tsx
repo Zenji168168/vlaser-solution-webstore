@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation'
 import { ShieldCheck } from 'lucide-react'
 import { AdminLoginForm } from './login-form'
+import { SetupPasswordForm } from './setup-password-form'
 import { getCurrentAdminAccess } from '@/lib/admin/auth'
 
 export const dynamic = 'force-dynamic'
@@ -23,6 +24,7 @@ export default async function AdminLoginPage() {
             </p>
           </div>
           <AdminLoginForm />
+          <SetupPasswordForm />
           {access.status === 'denied' && (
             <p className="mt-4 rounded-lg border border-amber-100 bg-amber-50 px-3 py-2 text-sm font-medium text-amber-800">
               Your account is signed in but is not approved for admin access.

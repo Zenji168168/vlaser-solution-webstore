@@ -122,6 +122,7 @@ test('admin bootstrap email normalization is strict and does not hardcode a user
   assert.equal(normalizeAdminEmail(' Admin@Example.COM '), 'admin@example.com')
   assert.equal(isValidAdminEmail('admin@example.com'), true)
   assert.equal(isValidAdminEmail('not-an-email'), false)
+  assert.doesNotMatch(readFileSync('lib/admin/foundation-setup.ts', 'utf8'), /meukthareach053@gmail\.com/)
 })
 
 test('temporary foundation setup route blocks production and requires authorization header', () => {
