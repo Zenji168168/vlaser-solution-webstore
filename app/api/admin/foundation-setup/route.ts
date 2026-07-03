@@ -99,6 +99,31 @@ async function verifyAuthSync() {
   return { exists: true, columns: columns.map(column => column.column_name) }
 }
 
+async function inspectAuthStorage() {
+  const sql = getSql()
+  const schemas = await sql`
+    select schema_name
+    from information_schema.schemata
+    where schema_name in ('neon_auth', 'auth', 'better_auth')
+       or schema_name like '%auth%'
+    order by schema_name
+  `
+  const tables = await sql`
+    select table_schema, table_name
+    from information_schema.tables
+    where table_schema in ('neon_auth', 'auth', 'better_auth')
+       or table_name in ('user', 'users', 'account', 'session')
+       or table_name like '%user%'
+       or table_name like '%session%'
+    order by table_schema, table_name
+    limit 40
+  `
+  return {
+    schemas: schemas.map(schema => schema.schema_name),
+    tables: tables.map(table => `${table.table_schema}.${table.table_name}`),
+  }
+}
+
 async function approveAdmin(email: string) {
   const normalized = normalizeAdminEmail(email)
   if (!isValidAdminEmail(normalized)) {
@@ -160,7 +185,12 @@ export async function POST(request: Request) {
     }
 
     if (action === 'verify') {
-      return Response.json({ ok: true, verification: await verifyMigration(), authSync: await verifyAuthSync() })
+      return Response.json({
+        ok: true,
+        verification: await verifyMigration(),
+        authSync: await verifyAuthSync(),
+        authStorage: await inspectAuthStorage(),
+      })
     }
 
     if (action === 'approve-admin') {
