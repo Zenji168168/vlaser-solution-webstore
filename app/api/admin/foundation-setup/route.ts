@@ -118,9 +118,17 @@ async function inspectAuthStorage() {
     order by table_schema, table_name
     limit 40
   `
+  const userColumns = await sql`
+    select column_name
+    from information_schema.columns
+    where table_schema = 'neon_auth' and table_name = 'user'
+    order by ordinal_position
+  `
+
   return {
     schemas: schemas.map(schema => schema.schema_name),
     tables: tables.map(table => `${table.table_schema}.${table.table_name}`),
+    userColumns: userColumns.map(column => column.column_name),
   }
 }
 
