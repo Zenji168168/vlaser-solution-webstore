@@ -146,8 +146,8 @@ async function approveAdmin(email: string) {
 
   const users = await sql`
     select id, email, name
-    from neon_auth.users_sync
-    where lower(email) = ${normalized} and deleted_at is null
+    from neon_auth.user
+    where lower(email) = ${normalized}
     limit 1
   `
   const user = users[0]
