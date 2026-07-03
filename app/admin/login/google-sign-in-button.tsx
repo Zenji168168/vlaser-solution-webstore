@@ -11,10 +11,11 @@ export function GoogleSignInButton() {
   const signInWithGoogle = async () => {
     setPending(true)
     setError('')
+    const origin = window.location.origin
     const { error } = await authClient.signIn.social({
       provider: 'google',
-      callbackURL: '/admin',
-      errorCallbackURL: '/admin/login?error=oauth',
+      callbackURL: `${origin}/admin`,
+      errorCallbackURL: `${origin}/admin/login?error=oauth`,
     })
 
     if (error) {

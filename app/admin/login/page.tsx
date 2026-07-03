@@ -14,6 +14,8 @@ export default async function AdminLoginPage({ searchParams }: Props) {
   const params = await searchParams
   const access = await getCurrentAdminAccess()
   if (access.status === 'granted') redirect('/admin')
+  if (access.status === 'denied') redirect('/admin/denied')
+  const hasOAuthError = params.error === 'oauth' || params.error === 'access_denied' || Boolean(params.error_description)
 
   return (
     <main className="min-h-screen bg-slate-100 px-4 py-10 text-slate-950">
@@ -28,9 +30,9 @@ export default async function AdminLoginPage({ searchParams }: Props) {
               Sign in with an approved administrator account. Access is verified on the server.
             </p>
           </div>
-          {params.error === 'oauth' && (
+          {hasOAuthError && (
             <p className="mb-4 rounded-lg border border-red-100 bg-red-50 px-3 py-2 text-sm font-medium text-red-700" role="alert">
-              Google sign-in did not complete. Try again with the approved administrator email.
+              Google sign-in did not complete. Try again with the approved administrator email and this Preview URL.
             </p>
           )}
           <GoogleSignInButton />
@@ -40,11 +42,6 @@ export default async function AdminLoginPage({ searchParams }: Props) {
             <div className="h-px flex-1 bg-slate-200" />
           </div>
           <AdminLoginForm />
-          {access.status === 'denied' && (
-            <p className="mt-4 rounded-lg border border-amber-100 bg-amber-50 px-3 py-2 text-sm font-medium text-amber-800">
-              Your account is signed in but is not approved for admin access.
-            </p>
-          )}
         </section>
       </div>
     </main>

@@ -140,8 +140,11 @@ test('admin login offers Google OAuth without public sign-up', () => {
 
   assert.match(googleButton, /signIn\.social/)
   assert.match(googleButton, /provider: 'google'/)
-  assert.match(googleButton, /callbackURL: '\/admin'/)
-  assert.match(googleButton, /errorCallbackURL: '\/admin\/login\?error=oauth'/)
+  assert.match(googleButton, /window\.location\.origin/)
+  assert.match(googleButton, /callbackURL: `\$\{origin\}\/admin`/)
+  assert.match(googleButton, /errorCallbackURL: `\$\{origin\}\/admin\/login\?error=oauth`/)
+  assert.match(loginPage, /access\.status === 'denied'\) redirect\('\/admin\/denied'\)/)
+  assert.match(loginPage, /Google sign-in did not complete/)
   assert.match(loginPage, /or sign in with email/)
   assert.doesNotMatch(loginPage + googleButton, /signUp|Create account/)
 })
