@@ -1,4 +1,5 @@
-﻿import { pgTable, text, integer, numeric, boolean, timestamp, serial, varchar, index, uniqueIndex } from 'drizzle-orm/pg-core'
+import { sql } from 'drizzle-orm'
+import { pgTable, text, integer, numeric, boolean, timestamp, serial, varchar, index, uniqueIndex, check } from 'drizzle-orm/pg-core'
 
 // === CATEGORIES ===
 export const categories = pgTable('categories', {
@@ -129,4 +130,5 @@ export const adminUsers = pgTable('admin_users', {
   uniqueIndex('idx_admin_users_auth_user_id').on(table.authUserId),
   uniqueIndex('idx_admin_users_email').on(table.email),
   index('idx_admin_users_active_role').on(table.active, table.role),
+  check('chk_admin_users_role', sql`${table.role} in ('admin')`),
 ])

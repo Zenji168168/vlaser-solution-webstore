@@ -3,6 +3,7 @@ import test from 'node:test'
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 import { evaluateAdminAccess, type AdminSession } from '../lib/admin/auth'
+import { ADMIN_FOUNDATION_CONSTRAINT_SQL, ADMIN_FOUNDATION_INDEX_SQL, ADMIN_FOUNDATION_TABLE_SQL, isValidAdminEmail, normalizeAdminEmail } from '../lib/admin/foundation-setup'
 import { getStockLabel, normalizeAdminProductFilters } from '../lib/admin/repository'
 
 const session: AdminSession = {
@@ -108,4 +109,26 @@ test('client bundle files do not expose auth secrets or database URLs', () => {
     const source = readFileSync(file, 'utf8')
     assert.doesNotMatch(source, /DATABASE_URL|POSTGRES_URL|NEON_AUTH_COOKIE_SECRET|ADMIN_SETUP_SECRET/)
   }
+})
+
+test('admin foundation migration SQL is idempotent and role constrained', () => {
+  assert.match(ADMIN_FOUNDATION_TABLE_SQL, /CREATE TABLE IF NOT EXISTS "admin_users"/)
+  assert.match(ADMIN_FOUNDATION_CONSTRAINT_SQL, /chk_admin_users_role/)
+  assert.match(ADMIN_FOUNDATION_CONSTRAINT_SQL, /"role" IN \('admin'\)/)
+  assert.ok(ADMIN_FOUNDATION_INDEX_SQL.every(statement => statement.includes('IF NOT EXISTS')))
+})
+
+test('admin bootstrap email normalization is strict and does not hardcode a user', () => {
+  assert.equal(normalizeAdminEmail(' Admin@Example.COM '), 'admin@example.com')
+  assert.equal(isValidAdminEmail('admin@example.com'), true)
+  assert.equal(isValidAdminEmail('not-an-email'), false)
+})
+
+test('temporary foundation setup route blocks production and requires authorization header', () => {
+  const source = readFileSync('app/api/admin/foundation-setup/route.ts', 'utf8')
+  assert.match(source, /process\.env\.VERCEL_ENV === 'production'/)
+  assert.match(source, /return notFound\(\)/)
+  assert.match(source, /ADMIN_FOUNDATION_BOOTSTRAP_SECRET/)
+  assert.match(source, /headers\.get\('authorization'\)/)
+  assert.doesNotMatch(source, /searchParams|get\('secret'\)|nextUrl\.search/)
 })
