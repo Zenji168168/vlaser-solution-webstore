@@ -187,6 +187,7 @@ test('temporary foundation setup route blocks production and requires authorizat
   assert.match(source, /process\.env\.VERCEL_ENV === 'production'/)
   assert.match(source, /return notFound\(\)/)
   assert.match(source, /ADMIN_FOUNDATION_BOOTSTRAP_SECRET/)
+  assert.match(source, /ADMIN_FOUNDATION_APPROVAL_SECRET/)
   assert.match(source, /headers\.get\('authorization'\)/)
   assert.doesNotMatch(source, /searchParams|get\('secret'\)|nextUrl\.search/)
 })

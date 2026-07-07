@@ -26,9 +26,11 @@ function getPool() {
 
 function isAuthorized(request: Request) {
   const expected = process.env.ADMIN_FOUNDATION_BOOTSTRAP_SECRET
-  if (!expected || process.env.VERCEL_ENV !== 'preview') return false
+  const approvalExpected = process.env.ADMIN_FOUNDATION_APPROVAL_SECRET
+  if ((!expected && !approvalExpected) || process.env.VERCEL_ENV !== 'preview') return false
   const header = request.headers.get('authorization') || ''
-  return header === `Bearer ${expected}`
+  return Boolean(expected && header === `Bearer ${expected}`)
+    || Boolean(approvalExpected && header === `Bearer ${approvalExpected}`)
 }
 
 async function runMigration() {
