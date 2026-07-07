@@ -4,8 +4,8 @@ import { useActionState, useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useFormStatus } from 'react-dom'
 import { AlertTriangle, CheckCircle2, ExternalLink, Save } from 'lucide-react'
-import { initialProductEditState, updateProductAction } from './actions'
-import { STOCK_STATUS_OPTIONS, type ProductEditFieldErrors } from '@/lib/admin/product-editing'
+import { updateProductAction } from './actions'
+import { initialProductEditState, STOCK_STATUS_OPTIONS, type ProductEditFieldErrors } from '@/lib/admin/product-editing'
 
 type SelectOption = { id: number; name: string; slug: string }
 

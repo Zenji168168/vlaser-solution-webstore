@@ -32,6 +32,20 @@ export type ProductEditValidation =
   | { ok: true; values: ProductEditValues }
   | { ok: false; fieldErrors: ProductEditFieldErrors; formError: string }
 
+export type ProductEditActionState = {
+  ok: boolean
+  message: string
+  fieldErrors: ProductEditFieldErrors
+  changedFields: string[]
+}
+
+export const initialProductEditState: ProductEditActionState = {
+  ok: false,
+  message: '',
+  fieldErrors: {},
+  changedFields: [],
+}
+
 const TEXT_LIMITS: Partial<Record<ProductEditField, number>> = {
   publicId: 20,
   nameEn: 300,

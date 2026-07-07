@@ -129,11 +129,16 @@ test('product update audit details contain safe product and field summary', () =
 
 test('product edit server action requires admin and revalidates storefront paths', () => {
   const source = readFileSync('app/admin/(protected)/products/[id]/edit/actions.ts', 'utf8')
+  const formSource = readFileSync('app/admin/(protected)/products/[id]/edit/product-edit-form.tsx', 'utf8')
+  const helperSource = readFileSync('lib/admin/product-editing.ts', 'utf8')
 
   assert.match(source, /'use server'/)
   assert.match(source, /requireAdmin\(\)/)
   assert.match(source, /validateProductEditForm/)
   assert.match(source, /updateAdminProduct/)
+  assert.doesNotMatch(source, /export const initialProductEditState/)
+  assert.match(formSource, /from '@\/lib\/admin\/product-editing'/)
+  assert.match(helperSource, /export const initialProductEditState/)
   assert.match(source, /revalidatePath\('\/'\)/)
   assert.match(source, /revalidatePath\('\/products'\)/)
   assert.match(source, /revalidatePath\(`\/products\/\$\{productId\}`\)/)
@@ -155,12 +160,36 @@ test('admin product edit UI is server protected and not client-state authorized'
   const pageSource = readFileSync('app/admin/(protected)/products/[id]/edit/page.tsx', 'utf8')
   const formSource = readFileSync('app/admin/(protected)/products/[id]/edit/product-edit-form.tsx', 'utf8')
   const layoutSource = readFileSync('app/admin/(protected)/layout.tsx', 'utf8')
+  const errorSource = readFileSync('app/admin/(protected)/products/[id]/edit/error.tsx', 'utf8')
+  const notFoundSource = readFileSync('app/admin/(protected)/products/[id]/edit/not-found.tsx', 'utf8')
 
   assert.match(layoutSource, /requireAdmin\(\)/)
   assert.match(pageSource, /getAdminProductEdit/)
   assert.match(pageSource, /getAdminProductEditOptions/)
+  assert.match(pageSource, /const \{ id \} = await params/)
+  assert.match(pageSource, /if \(!product\) notFound\(\)/)
   assert.match(formSource, /useActionState\(updateProductAction/)
+  assert.match(formSource, /English product name/)
+  assert.match(formSource, /Khmer product name/)
+  assert.match(formSource, /Stock status \/ availability/)
+  assert.match(formSource, /Save Product/)
+  assert.match(errorSource, /Unable to load product editor/)
+  assert.match(errorSource, /The product editor could not be loaded\. Please try again\./)
+  assert.doesNotMatch(errorSource, /Unable to load products|product list could not be loaded/)
+  assert.match(notFoundSource, /Product not found/)
   assert.doesNotMatch(formSource, /localStorage|sessionStorage/)
+})
+
+test('admin product edit loader uses public product IDs and loads active dropdown data', () => {
+  const repoSource = readFileSync('lib/admin/repository.ts', 'utf8')
+  const pageSource = readFileSync('app/admin/(protected)/products/[id]/edit/page.tsx', 'utf8')
+
+  assert.match(repoSource, /where\(eq\(schema\.products\.publicId, publicId\)\)/)
+  assert.match(repoSource, /where\(eq\(schema\.categories\.active, true\)\)/)
+  assert.match(repoSource, /where\(eq\(schema\.brands\.active, true\)\)/)
+  assert.match(pageSource, /getAdminProductEdit\(id\)/)
+  assert.match(pageSource, /getAdminProductEditOptions\(\)/)
+  assert.match(pageSource, /p1382|product\.sku/)
 })
 
 test('admin product list and preview expose edit actions without delete or upload controls', () => {

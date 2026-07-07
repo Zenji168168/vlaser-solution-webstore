@@ -3,21 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import { requireAdmin } from '@/lib/admin/auth'
 import { updateAdminProduct } from '@/lib/admin/repository'
-import { validateProductEditForm, type ProductEditFieldErrors } from '@/lib/admin/product-editing'
-
-export type ProductEditActionState = {
-  ok: boolean
-  message: string
-  fieldErrors: ProductEditFieldErrors
-  changedFields: string[]
-}
-
-export const initialProductEditState: ProductEditActionState = {
-  ok: false,
-  message: '',
-  fieldErrors: {},
-  changedFields: [],
-}
+import { validateProductEditForm, type ProductEditActionState } from '@/lib/admin/product-editing'
 
 function revalidateProductEditPaths(productId: string) {
   revalidatePath('/')
