@@ -39,7 +39,7 @@ export function GoogleSignInButton() {
     try {
       const result = await authClient.signIn.social({
         provider: 'google',
-        callbackURL: `${window.location.origin}/admin`,
+        callbackURL: `${window.location.origin}/admin/auth/callback`,
         errorCallbackURL: `${window.location.origin}/admin/login?error=oauth`,
       })
       const oauthUrl = getOAuthUrl(result)

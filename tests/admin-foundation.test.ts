@@ -141,7 +141,7 @@ test('admin login offers Google OAuth without public sign-up', () => {
   assert.match(googleButton, /signIn\.social/)
   assert.match(googleButton, /provider: 'google'/)
   assert.match(googleButton, /window\.location\.origin/)
-  assert.match(googleButton, /callbackURL: `\$\{window\.location\.origin\}\/admin`/)
+  assert.match(googleButton, /callbackURL: `\$\{window\.location\.origin\}\/admin\/auth\/callback`/)
   assert.match(googleButton, /errorCallbackURL: `\$\{window\.location\.origin\}\/admin\/login\?error=oauth`/)
   assert.match(googleButton, /window\.location\.assign\(oauthUrl\)/)
   assert.match(googleButton, /GOOGLE_SIGN_IN_TIMEOUT_MS = 15_000/)
@@ -150,6 +150,14 @@ test('admin login offers Google OAuth without public sign-up', () => {
   assert.match(loginPage, /Google sign-in did not complete/)
   assert.match(loginPage, /or sign in with email/)
   assert.doesNotMatch(loginPage + googleButton, /signUp|Create account/)
+})
+
+test('admin OAuth callback exchanges browser session before protected redirect', () => {
+  const callbackPage = readFileSync('app/admin/auth/callback/page.tsx', 'utf8')
+
+  assert.match(callbackPage, /authClient\.getSession\(\)/)
+  assert.match(callbackPage, /window\.location\.replace\('\/admin'\)/)
+  assert.match(callbackPage, /window\.location\.replace\('\/admin\/login\?error=oauth'\)/)
 })
 
 test('approved admin session can relink auth user id server-side', () => {
