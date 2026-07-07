@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { Eye, Search } from 'lucide-react'
+import { Eye, Pencil, Search } from 'lucide-react'
 import { getAdminProductOptions, getAdminProducts, getStockLabel } from '@/lib/admin/repository'
 
 interface Props {
@@ -42,7 +42,7 @@ export default async function AdminProductsPage({ searchParams }: Props) {
     <div className="space-y-5">
       <div>
         <h1 className="text-2xl font-black tracking-tight text-slate-950">Products</h1>
-        <p className="mt-1 text-sm text-slate-600">Read-only product management list with server-side filtering.</p>
+        <p className="mt-1 text-sm text-slate-600">Database-backed product management with server-side filtering and guarded editing.</p>
       </div>
 
       <form className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm" action="/admin/products">
@@ -120,7 +120,7 @@ export default async function AdminProductsPage({ searchParams }: Props) {
                     <th className="px-4 py-3">Status</th>
                     <th className="px-4 py-3">Khmer</th>
                     <th className="px-4 py-3">Updated</th>
-                    <th className="px-4 py-3">Preview</th>
+                    <th className="px-4 py-3">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
@@ -141,12 +141,21 @@ export default async function AdminProductsPage({ searchParams }: Props) {
                       <td className="px-4 py-3 font-semibold">${product.price.toFixed(2)}</td>
                       <td className="px-4 py-3">{product.stockQty} <span className="text-xs text-slate-500">{getStockLabel(product.stockQty, product.stockStatus)}</span></td>
                       <td className="px-4 py-3">{statusText(product.published, product.archived)}</td>
-                      <td className="px-4 py-3">{product.nameKm ? 'Name OK' : 'Missing name'}</td>
+                      <td className="px-4 py-3">
+                        {product.missingKhmerName || product.missingKhmerDescription ? (
+                          <span className="text-amber-700">{product.missingKhmerName ? 'Missing name' : 'Missing description'}</span>
+                        ) : 'Complete'}
+                      </td>
                       <td className="px-4 py-3 text-xs text-slate-500">{product.updatedAt ? product.updatedAt.toLocaleDateString('en-US') : 'N/A'}</td>
                       <td className="px-4 py-3">
-                        <Link href={`/admin/products/${product.id}`} className="inline-flex size-9 items-center justify-center rounded-lg border border-slate-200 text-slate-700 hover:bg-slate-50 focus-ring" aria-label={`Preview ${product.sku}`}>
-                          <Eye className="size-4" aria-hidden="true" />
-                        </Link>
+                        <div className="flex gap-2">
+                          <Link href={`/admin/products/${product.id}`} className="inline-flex size-9 items-center justify-center rounded-lg border border-slate-200 text-slate-700 hover:bg-slate-50 focus-ring" aria-label={`Preview ${product.sku}`}>
+                            <Eye className="size-4" aria-hidden="true" />
+                          </Link>
+                          <Link href={`/admin/products/${product.id}/edit`} className="inline-flex size-9 items-center justify-center rounded-lg border border-slate-200 text-slate-700 hover:bg-slate-50 focus-ring" aria-label={`Edit ${product.sku}`}>
+                            <Pencil className="size-4" aria-hidden="true" />
+                          </Link>
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -170,10 +179,16 @@ export default async function AdminProductsPage({ searchParams }: Props) {
                     <div><dt className="text-slate-500">Price</dt><dd className="font-semibold">${product.price.toFixed(2)}</dd></div>
                     <div><dt className="text-slate-500">Stock</dt><dd className="font-semibold">{product.stockQty}</dd></div>
                   </dl>
-                  <Link href={`/admin/products/${product.id}`} className="btn-secondary mt-3 h-10 w-full rounded-lg">
-                    <Eye className="size-4" aria-hidden="true" />
-                    Preview
-                  </Link>
+                  <div className="mt-3 grid grid-cols-2 gap-2">
+                    <Link href={`/admin/products/${product.id}`} className="btn-secondary h-10 rounded-lg">
+                      <Eye className="size-4" aria-hidden="true" />
+                      Preview
+                    </Link>
+                    <Link href={`/admin/products/${product.id}/edit`} className="btn-primary h-10 rounded-lg bg-slate-950 hover:bg-slate-800">
+                      <Pencil className="size-4" aria-hidden="true" />
+                      Edit
+                    </Link>
+                  </div>
                 </article>
               ))}
             </div>

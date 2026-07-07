@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import { ArrowLeft, ExternalLink } from 'lucide-react'
-import { getAdminProductPreview, getStockLabel } from '@/lib/admin/repository'
+import { ArrowLeft, Clock3, ExternalLink, Pencil } from 'lucide-react'
+import { getAdminProductAuditSummary, getAdminProductPreview, getStockLabel } from '@/lib/admin/repository'
 
 interface Props {
   params: Promise<{ id: string }>
@@ -27,7 +27,10 @@ function TextBlock({ title, value }: { title: string; value: string | null }) {
 
 export default async function AdminProductPreviewPage({ params }: Props) {
   const { id } = await params
-  const product = await getAdminProductPreview(id)
+  const [product, audit] = await Promise.all([
+    getAdminProductPreview(id),
+    getAdminProductAuditSummary(id),
+  ])
   if (!product) notFound()
 
   const publishState = product.archived ? 'Archived' : product.published ? 'Published' : 'Draft'
@@ -43,14 +46,20 @@ export default async function AdminProductPreviewPage({ params }: Props) {
           <h1 className="max-w-4xl text-2xl font-black tracking-tight text-slate-950">{product.nameEn}</h1>
           <p className="mt-1 font-mono text-sm text-slate-500">{product.sku}</p>
         </div>
-        {product.published && !product.archived ? (
-          <Link href={`/products/${product.id}`} className="btn-primary h-10 rounded-lg bg-slate-950 px-4 hover:bg-slate-800">
-            <ExternalLink className="size-4" aria-hidden="true" />
-            Open Public Product Page
+        <div className="flex flex-wrap gap-2">
+          <Link href={`/admin/products/${product.id}/edit`} className="btn-primary h-10 rounded-lg bg-slate-950 px-4 hover:bg-slate-800">
+            <Pencil className="size-4" aria-hidden="true" />
+            Edit Product
           </Link>
-        ) : (
-          <span className="rounded-lg border border-amber-100 bg-amber-50 px-3 py-2 text-sm font-semibold text-amber-800">Not public</span>
-        )}
+          {product.published && !product.archived ? (
+            <Link href={`/products/${product.id}`} className="btn-secondary h-10 rounded-lg px-4">
+              <ExternalLink className="size-4" aria-hidden="true" />
+              Open Public Product Page
+            </Link>
+          ) : (
+            <span className="rounded-lg border border-amber-100 bg-amber-50 px-3 py-2 text-sm font-semibold text-amber-800">Not public</span>
+          )}
+        </div>
       </div>
 
       <section className="grid gap-5 xl:grid-cols-[minmax(280px,420px)_1fr]">
@@ -143,6 +152,23 @@ export default async function AdminProductPreviewPage({ params }: Props) {
           <Field label="SEO description EN" value={product.seoDescEn} />
           <Field label="SEO description KM" value={product.seoDescKm} />
         </dl>
+      </section>
+
+      <section className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
+        <h2 className="text-base font-black text-slate-950">Audit History</h2>
+        {audit.length ? (
+          <ul className="mt-3 divide-y divide-slate-100 text-sm">
+            {audit.map((entry, index) => (
+              <li key={`${entry.action}-${index}`} className="flex flex-col gap-1 py-3 sm:flex-row sm:items-center sm:justify-between">
+                <span className="font-semibold text-slate-900">{entry.action}</span>
+                <span className="flex items-center gap-2 text-xs text-slate-500">
+                  <Clock3 className="size-3.5" aria-hidden="true" />
+                  {entry.createdAt ? entry.createdAt.toLocaleString('en-US') : 'N/A'}
+                </span>
+              </li>
+            ))}
+          </ul>
+        ) : <p className="mt-2 text-sm text-slate-600">No product update audit entries yet.</p>}
       </section>
     </div>
   )

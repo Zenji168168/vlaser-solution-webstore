@@ -3,6 +3,7 @@ import { neon } from '@neondatabase/serverless'
 import { drizzle } from 'drizzle-orm/neon-http'
 import { and, asc, count, desc, eq, ilike, or, sql, type SQL } from 'drizzle-orm'
 import * as schema from '@/db/schema'
+import { buildProductUpdateAuditDetails, getChangedProductEditFields, type ProductEditValues } from '@/lib/admin/product-editing'
 import { selectPreferredProductImages } from '@/lib/repositories/product-repository'
 
 function getDb() {
@@ -44,10 +45,13 @@ export interface AdminProductListItem {
   stockStatus: string
   published: boolean
   archived: boolean
+  missingKhmerName: boolean
+  missingKhmerDescription: boolean
   updatedAt: Date | null
 }
 
 export interface AdminProductPreview {
+  databaseId: number
   id: string
   sku: string
   model: string | null
@@ -81,6 +85,18 @@ export interface AdminProductPreview {
   images: Array<{ url: string; altEn: string | null; altKm: string | null; isPrimary: boolean; sortOrder: number }>
   features: Array<{ featureEn: string; featureKm: string | null }>
   specs: Array<{ groupEn: string | null; groupKm: string | null; keyEn: string; keyKm: string | null; value: string }>
+}
+
+export interface AdminProductEditOptions {
+  categories: Array<{ id: number; name: string; slug: string }>
+  brands: Array<{ id: number; name: string; slug: string }>
+}
+
+export interface AdminProductAuditSummary {
+  action: string
+  userId: string | null
+  details: string | null
+  createdAt: Date | null
 }
 
 export interface DashboardStats {
@@ -256,6 +272,21 @@ export async function getAdminProductOptions() {
   return { categories, brands }
 }
 
+export async function getAdminProductEditOptions(): Promise<AdminProductEditOptions> {
+  const db = getDb()
+  const [categories, brands] = await Promise.all([
+    db.select({ id: schema.categories.id, slug: schema.categories.slug, name: schema.categories.nameEn })
+      .from(schema.categories)
+      .where(eq(schema.categories.active, true))
+      .orderBy(asc(schema.categories.nameEn)),
+    db.select({ id: schema.brands.id, slug: schema.brands.slug, name: schema.brands.name })
+      .from(schema.brands)
+      .where(eq(schema.brands.active, true))
+      .orderBy(asc(schema.brands.name)),
+  ])
+  return { categories, brands }
+}
+
 export async function getAdminProducts(input: AdminProductFilters) {
   const db = getDb()
   const filters = normalizeAdminProductFilters(input)
@@ -275,6 +306,7 @@ export async function getAdminProducts(input: AdminProductFilters) {
       sku: schema.products.sku,
       nameEn: schema.products.nameEn,
       nameKm: schema.products.nameKm,
+      descKm: schema.products.descKm,
       price: schema.products.price,
       stockQty: schema.products.stockQty,
       stockStatus: schema.products.stockStatus,
@@ -320,6 +352,8 @@ export async function getAdminProducts(input: AdminProductFilters) {
       stockStatus: row.stockStatus || 'Price List',
       published: Boolean(row.published),
       archived: Boolean(row.archived),
+      missingKhmerName: !row.nameKm,
+      missingKhmerDescription: !row.descKm,
       updatedAt: row.updatedAt,
     })),
     total,
@@ -339,7 +373,9 @@ export async function getAdminProductPreview(publicId: string): Promise<AdminPro
     nameEn: schema.products.nameEn,
     nameKm: schema.products.nameKm,
     brand: schema.brands.name,
+    brandId: schema.products.brandId,
     category: schema.categories.nameEn,
+    categoryId: schema.products.categoryId,
     shortDescEn: schema.products.shortDescEn,
     shortDescKm: schema.products.shortDescKm,
     descEn: schema.products.descEn,
@@ -395,6 +431,7 @@ export async function getAdminProductPreview(publicId: string): Promise<AdminPro
   ])
 
   return {
+    databaseId: row.id,
     id: row.publicId,
     sku: row.sku,
     model: row.model,
@@ -435,4 +472,136 @@ export async function getAdminProductPreview(publicId: string): Promise<AdminPro
     features,
     specs,
   }
+}
+
+export async function getAdminProductAuditSummary(publicId: string, limit = 5): Promise<AdminProductAuditSummary[]> {
+  const db = getDb()
+  return db.select({
+    action: schema.auditLog.action,
+    userId: schema.auditLog.userId,
+    details: schema.auditLog.details,
+    createdAt: schema.auditLog.createdAt,
+  })
+    .from(schema.auditLog)
+    .where(and(
+      eq(schema.auditLog.entityType, 'product'),
+      eq(schema.auditLog.entityId, publicId),
+    ))
+    .orderBy(desc(schema.auditLog.createdAt))
+    .limit(limit)
+}
+
+export async function getAdminProductEdit(publicId: string): Promise<(AdminProductPreview & {
+  brandId: number | null
+  categoryId: number | null
+}) | null> {
+  const product = await getAdminProductPreview(publicId)
+  if (!product) return null
+
+  const db = getDb()
+  const [row] = await db.select({
+    brandId: schema.products.brandId,
+    categoryId: schema.products.categoryId,
+  })
+    .from(schema.products)
+    .where(eq(schema.products.publicId, publicId))
+    .limit(1)
+
+  return row ? { ...product, brandId: row.brandId, categoryId: row.categoryId } : null
+}
+
+function toProductEditValues(product: AdminProductPreview & { brandId: number | null; categoryId: number | null }): ProductEditValues {
+  return {
+    publicId: product.id,
+    nameEn: product.nameEn,
+    nameKm: product.nameKm || '',
+    sku: product.sku,
+    model: product.model || '',
+    brandId: product.brandId || 0,
+    categoryId: product.categoryId || 0,
+    price: product.price.toFixed(2),
+    stockQty: product.stockQty,
+    stockStatus: product.stockStatus,
+    published: product.published,
+    archived: product.archived,
+    shortDescEn: product.shortDescEn || '',
+    shortDescKm: product.shortDescKm || '',
+    descEn: product.descEn || '',
+    descKm: product.descKm || '',
+    warrantyEn: product.warrantyEn || '',
+    warrantyKm: product.warrantyKm || '',
+    installationEn: product.installationEn || '',
+    installationKm: product.installationKm || '',
+    seoTitleEn: product.seoTitleEn || '',
+    seoDescEn: product.seoDescEn || '',
+  }
+}
+
+export async function updateAdminProduct(input: ProductEditValues, admin: { authUserId: string; email: string }) {
+  const db = getDb()
+  const [product, brand, category] = await Promise.all([
+    getAdminProductEdit(input.publicId),
+    db.select({ id: schema.brands.id }).from(schema.brands).where(eq(schema.brands.id, input.brandId)).limit(1),
+    db.select({ id: schema.categories.id }).from(schema.categories).where(eq(schema.categories.id, input.categoryId)).limit(1),
+  ])
+
+  if (!product) return { ok: false as const, error: 'Product not found.' }
+  if (!brand.length) return { ok: false as const, fieldErrors: { brandId: 'Choose an existing brand.' }, error: 'Check the highlighted fields and try again.' }
+  if (!category.length) return { ok: false as const, fieldErrors: { categoryId: 'Choose an existing category.' }, error: 'Check the highlighted fields and try again.' }
+
+  const before = toProductEditValues(product)
+  const changedFields = getChangedProductEditFields(before, input)
+
+  const [updated] = await db.update(schema.products)
+    .set({
+      sku: input.sku,
+      model: input.model || null,
+      nameEn: input.nameEn,
+      nameKm: input.nameKm || null,
+      brandId: input.brandId,
+      categoryId: input.categoryId,
+      shortDescEn: input.shortDescEn || null,
+      shortDescKm: input.shortDescKm || null,
+      descEn: input.descEn || null,
+      descKm: input.descKm || null,
+      price: input.price,
+      stockQty: input.stockQty,
+      stockStatus: input.stockStatus,
+      published: input.published,
+      archived: input.archived,
+      warrantyEn: input.warrantyEn || null,
+      warrantyKm: input.warrantyKm || null,
+      installationEn: input.installationEn || null,
+      installationKm: input.installationKm || null,
+      seoTitleEn: input.seoTitleEn || null,
+      seoDescEn: input.seoDescEn || null,
+      updatedBy: admin.email,
+      updatedAt: new Date(),
+      publishedAt: input.published && !product.published ? new Date() : product.publishedAt,
+    })
+    .where(eq(schema.products.publicId, input.publicId))
+    .returning({
+      publicId: schema.products.publicId,
+      sku: schema.products.sku,
+      updatedAt: schema.products.updatedAt,
+    })
+
+  if (!updated) return { ok: false as const, error: 'Product could not be updated.' }
+
+  await db.insert(schema.auditLog).values({
+    userId: admin.authUserId || admin.email,
+    action: 'product.update',
+    entityType: 'product',
+    entityId: updated.publicId,
+    details: buildProductUpdateAuditDetails({
+      productId: updated.publicId,
+      sku: updated.sku,
+      adminEmail: admin.email,
+      changedFields,
+      before,
+      after: input,
+    }),
+  })
+
+  return { ok: true as const, productId: updated.publicId, sku: updated.sku, changedFields }
 }
