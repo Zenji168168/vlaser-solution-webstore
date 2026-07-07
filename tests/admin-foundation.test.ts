@@ -3,7 +3,7 @@ import test from 'node:test'
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 import { evaluateAdminAccess, type AdminSession } from '../lib/admin/auth'
-import { ADMIN_FOUNDATION_CONSTRAINT_SQL, ADMIN_FOUNDATION_INDEX_SQL, ADMIN_FOUNDATION_TABLE_SQL, isValidAdminEmail, normalizeAdminEmail } from '../lib/admin/foundation-setup'
+import { ADMIN_FOUNDATION_CONSTRAINT_SQL, ADMIN_FOUNDATION_INDEX_SQL, ADMIN_FOUNDATION_TABLE_SQL, getPendingAdminAuthUserId, isValidAdminEmail, normalizeAdminEmail } from '../lib/admin/foundation-setup'
 import { getStockLabel, normalizeAdminProductFilters } from '../lib/admin/repository'
 
 const session: AdminSession = {
@@ -13,6 +13,7 @@ const session: AdminSession = {
     name: 'Admin User',
   },
 }
+const approvedAdminEmails = ['meukthareach053@gmail.com', 'zenjialwayskind@gmail.com'] as const
 
 test('unauthenticated admin requests are marked for redirect', () => {
   const access = evaluateAdminAccess(null, null)
@@ -35,6 +36,27 @@ test('approved active admin user receives access', () => {
   assert.equal(access.status, 'granted')
 })
 
+test('approved Google admin emails receive access from active admin rows', () => {
+  for (const email of approvedAdminEmails) {
+    const googleSession: AdminSession = {
+      user: {
+        id: `google:${email}`,
+        email: email.toUpperCase(),
+        name: 'Google Admin',
+      },
+    }
+    const access = evaluateAdminAccess(googleSession, {
+      authUserId: googleSession.user.id,
+      email,
+      displayName: 'Google Admin',
+      role: 'admin',
+      active: true,
+    })
+
+    assert.equal(access.status, 'granted')
+  }
+})
+
 test('inactive or non-admin role does not receive access', () => {
   assert.equal(evaluateAdminAccess(session, {
     authUserId: 'user_123',
@@ -51,6 +73,38 @@ test('inactive or non-admin role does not receive access', () => {
     role: 'admin',
     active: false,
   }).status, 'denied')
+})
+
+test('unapproved Google account is denied', () => {
+  const googleSession: AdminSession = {
+    user: {
+      id: 'google:intruder@example.com',
+      email: 'intruder@example.com',
+      name: 'Not Admin',
+    },
+  }
+  const access = evaluateAdminAccess(googleSession, null)
+
+  assert.equal(access.status, 'denied')
+})
+
+test('inactive approved admin is denied', () => {
+  const googleSession: AdminSession = {
+    user: {
+      id: 'google:zenjialwayskind@gmail.com',
+      email: 'zenjialwayskind@gmail.com',
+      name: 'Inactive Admin',
+    },
+  }
+  const access = evaluateAdminAccess(googleSession, {
+    authUserId: googleSession.user.id,
+    email: 'zenjialwayskind@gmail.com',
+    displayName: 'Inactive Admin',
+    role: 'admin',
+    active: false,
+  })
+
+  assert.equal(access.status, 'denied')
 })
 
 test('product admin query pagination is normalized and bounded', () => {
@@ -120,9 +174,12 @@ test('admin foundation migration SQL is idempotent and role constrained', () => 
 
 test('admin bootstrap email normalization is strict and does not hardcode a user', () => {
   assert.equal(normalizeAdminEmail(' Admin@Example.COM '), 'admin@example.com')
+  assert.equal(normalizeAdminEmail(' ZenjiAlwaysKind@GMAIL.COM '), 'zenjialwayskind@gmail.com')
+  assert.equal(getPendingAdminAuthUserId(' ZenjiAlwaysKind@GMAIL.COM '), 'pending:zenjialwayskind@gmail.com')
   assert.equal(isValidAdminEmail('admin@example.com'), true)
   assert.equal(isValidAdminEmail('not-an-email'), false)
   assert.doesNotMatch(readFileSync('lib/admin/foundation-setup.ts', 'utf8'), /meukthareach053@gmail\.com/)
+  assert.doesNotMatch(readFileSync('lib/admin/foundation-setup.ts', 'utf8'), /zenjialwayskind@gmail\.com/)
 })
 
 test('temporary foundation setup route blocks production and requires authorization header', () => {
@@ -163,9 +220,13 @@ test('admin OAuth callback exchanges browser session before protected redirect',
 test('approved admin session can relink auth user id server-side', () => {
   const authSource = readFileSync('lib/admin/auth.ts', 'utf8')
   const repoSource = readFileSync('lib/admin/repository.ts', 'utf8')
+  const setupSource = readFileSync('app/api/admin/foundation-setup/route.ts', 'utf8')
 
   assert.match(authSource, /syncAdminUserAuthIdentity/)
   assert.match(repoSource, /eq\(schema\.adminUsers\.email, normalizedEmail\)/)
   assert.match(repoSource, /eq\(schema\.adminUsers\.role, 'admin'\)/)
   assert.match(repoSource, /eq\(schema\.adminUsers\.active, true\)/)
+  assert.match(setupSource, /getPendingAdminAuthUserId\(normalized\)/)
+  assert.match(setupSource, /public\.admin_users\.auth_user_id not like 'pending:%'/)
+  assert.match(setupSource, /pendingFirstLoginLink: String\(row\.auth_user_id\)\.startsWith\('pending:'\)/)
 })

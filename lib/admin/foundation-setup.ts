@@ -29,6 +29,10 @@ export function normalizeAdminEmail(email: string) {
   return email.trim().toLowerCase()
 }
 
+export function getPendingAdminAuthUserId(email: string) {
+  return `pending:${normalizeAdminEmail(email)}`
+}
+
 export function isValidAdminEmail(email: string) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
 }

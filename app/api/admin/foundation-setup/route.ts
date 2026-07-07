@@ -3,6 +3,7 @@ import {
   ADMIN_FOUNDATION_CONSTRAINT_SQL,
   ADMIN_FOUNDATION_INDEX_SQL,
   ADMIN_FOUNDATION_TABLE_SQL,
+  getPendingAdminAuthUserId,
   isValidAdminEmail,
   normalizeAdminEmail,
 } from '@/lib/admin/foundation-setup'
@@ -165,31 +166,30 @@ async function approveAdmin(email: string) {
 
   const sql = getSql()
   const authUserTableExists = await verifyAuthUserTable()
-  if (!authUserTableExists) {
-    return { status: 409, body: { error: 'Neon Auth user table is not available.' } }
-  }
-
-  const users = await sql`
+  const users = authUserTableExists ? await sql`
     select id, email, name
     from neon_auth.user
     where lower(email) = ${normalized}
     limit 1
-  `
+  ` : []
   const user = users[0]
-  if (!user) {
-    return { status: 404, body: { error: 'Auth user not found for approved email.' } }
-  }
+  const authUserId = user?.id || getPendingAdminAuthUserId(normalized)
 
   const [row] = await sql`
     insert into public.admin_users (auth_user_id, email, display_name, role, active, created_at, updated_at)
-    values (${user.id}, ${normalized}, ${user.name || null}, 'admin', true, now(), now())
+    values (${authUserId}, ${normalized}, ${user?.name || null}, 'admin', true, now(), now())
     on conflict (email) do update set
-      auth_user_id = excluded.auth_user_id,
+      auth_user_id = case
+        when excluded.auth_user_id like 'pending:%'
+          and public.admin_users.auth_user_id not like 'pending:%'
+        then public.admin_users.auth_user_id
+        else excluded.auth_user_id
+      end,
       display_name = coalesce(excluded.display_name, public.admin_users.display_name),
       role = 'admin',
       active = true,
       updated_at = now()
-    returning email, display_name, role, active
+    returning auth_user_id, email, display_name, role, active
   `
 
   return {
@@ -200,6 +200,8 @@ async function approveAdmin(email: string) {
       displayName: row.display_name,
       role: row.role,
       active: row.active,
+      authUserLinked: Boolean(user),
+      pendingFirstLoginLink: String(row.auth_user_id).startsWith('pending:'),
     },
   }
 }
