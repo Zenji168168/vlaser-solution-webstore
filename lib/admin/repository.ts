@@ -3,6 +3,7 @@ import { neon } from '@neondatabase/serverless'
 import { drizzle } from 'drizzle-orm/neon-http'
 import { and, asc, count, desc, eq, ilike, or, sql, type SQL } from 'drizzle-orm'
 import * as schema from '@/db/schema'
+import { buildProductImageAuditDetails } from '@/lib/admin/product-image-management'
 import { buildProductUpdateAuditDetails, getChangedProductEditFields, type ProductEditValues } from '@/lib/admin/product-editing'
 import { selectPreferredProductImages } from '@/lib/repositories/product-repository'
 
@@ -82,7 +83,7 @@ export interface AdminProductPreview {
   createdAt: Date | null
   updatedAt: Date | null
   publishedAt: Date | null
-  images: Array<{ url: string; altEn: string | null; altKm: string | null; isPrimary: boolean; sortOrder: number }>
+  images: Array<{ id: number; url: string; altEn: string | null; altKm: string | null; isPrimary: boolean; sortOrder: number }>
   features: Array<{ featureEn: string; featureKm: string | null }>
   specs: Array<{ groupEn: string | null; groupKm: string | null; keyEn: string; keyKm: string | null; value: string }>
 }
@@ -97,6 +98,17 @@ export interface AdminProductAuditSummary {
   userId: string | null
   details: string | null
   createdAt: Date | null
+}
+
+export interface AdminProductImageRecord {
+  id: number
+  productId: number
+  publicId: string
+  url: string
+  altEn: string | null
+  altKm: string | null
+  isPrimary: boolean
+  sortOrder: number
 }
 
 export interface DashboardStats {
@@ -411,6 +423,7 @@ export async function getAdminProductPreview(publicId: string): Promise<AdminPro
 
   const [images, features, specs] = await Promise.all([
     db.select({
+      id: schema.productImages.id,
       url: schema.productImages.url,
       altEn: schema.productImages.altEn,
       altKm: schema.productImages.altKm,
@@ -463,6 +476,7 @@ export async function getAdminProductPreview(publicId: string): Promise<AdminPro
     updatedAt: row.updatedAt,
     publishedAt: row.publishedAt,
     images: images.map(image => ({
+      id: image.id,
       url: image.url,
       altEn: image.altEn,
       altKm: image.altKm,
@@ -472,6 +486,211 @@ export async function getAdminProductPreview(publicId: string): Promise<AdminPro
     features,
     specs,
   }
+}
+
+async function getProductIdentity(publicId: string) {
+  const db = getDb()
+  const [product] = await db.select({
+    id: schema.products.id,
+    publicId: schema.products.publicId,
+    sku: schema.products.sku,
+  })
+    .from(schema.products)
+    .where(eq(schema.products.publicId, publicId))
+    .limit(1)
+  return product || null
+}
+
+async function getProductImageById(publicId: string, imageId: number): Promise<AdminProductImageRecord | null> {
+  const db = getDb()
+  const [image] = await db.select({
+    id: schema.productImages.id,
+    productId: schema.productImages.productId,
+    publicId: schema.products.publicId,
+    url: schema.productImages.url,
+    altEn: schema.productImages.altEn,
+    altKm: schema.productImages.altKm,
+    isPrimary: schema.productImages.isPrimary,
+    sortOrder: schema.productImages.sortOrder,
+  })
+    .from(schema.productImages)
+    .innerJoin(schema.products, eq(schema.productImages.productId, schema.products.id))
+    .where(and(eq(schema.products.publicId, publicId), eq(schema.productImages.id, imageId)))
+    .limit(1)
+
+  return image ? {
+    id: image.id,
+    productId: image.productId,
+    publicId: image.publicId,
+    url: image.url,
+    altEn: image.altEn,
+    altKm: image.altKm,
+    isPrimary: Boolean(image.isPrimary),
+    sortOrder: image.sortOrder || 0,
+  } : null
+}
+
+async function writeProductImageAudit(input: {
+  admin: { authUserId: string; email: string }
+  action: string
+  productId: string
+  imageId?: number
+  imageUrl?: string
+  changedFields?: string[]
+}) {
+  const db = getDb()
+  await db.insert(schema.auditLog).values({
+    userId: input.admin.authUserId || input.admin.email,
+    action: input.action,
+    entityType: 'product',
+    entityId: input.productId,
+    details: buildProductImageAuditDetails({
+      productId: input.productId,
+      imageId: input.imageId,
+      imageUrl: input.imageUrl,
+      adminEmail: input.admin.email,
+      changedFields: input.changedFields,
+    }),
+  })
+}
+
+export async function addAdminProductImage(input: {
+  publicId: string
+  url: string
+  altEn: string
+  altKm: string
+  admin: { authUserId: string; email: string }
+}) {
+  const db = getDb()
+  const product = await getProductIdentity(input.publicId)
+  if (!product) return { ok: false as const, error: 'Product not found.' }
+
+  const [orderRow] = await db.select({ value: sql<number>`coalesce(max(${schema.productImages.sortOrder}), -1) + 1` })
+    .from(schema.productImages)
+    .where(eq(schema.productImages.productId, product.id))
+  const [countRow] = await db.select({ value: count() })
+    .from(schema.productImages)
+    .where(eq(schema.productImages.productId, product.id))
+  const sortOrder = Number(orderRow?.value || 0)
+  const shouldPrimary = Number(countRow?.value || 0) === 0
+
+  const [image] = await db.insert(schema.productImages).values({
+    productId: product.id,
+    url: input.url,
+    altEn: input.altEn || null,
+    altKm: input.altKm || null,
+    isPrimary: shouldPrimary,
+    sortOrder,
+  }).returning({
+    id: schema.productImages.id,
+    url: schema.productImages.url,
+  })
+
+  await writeProductImageAudit({
+    admin: input.admin,
+    action: 'product.image.upload',
+    productId: product.publicId,
+    imageId: image.id,
+    imageUrl: image.url,
+    changedFields: ['url', 'altEn', 'altKm', 'sortOrder', 'isPrimary'],
+  })
+
+  return { ok: true as const, productId: product.publicId, imageId: image.id, url: image.url }
+}
+
+export async function setAdminProductPrimaryImage(input: {
+  publicId: string
+  imageId: number
+  admin: { authUserId: string; email: string }
+}) {
+  const db = getDb()
+  const image = await getProductImageById(input.publicId, input.imageId)
+  if (!image) return { ok: false as const, error: 'Image not found for this product.' }
+
+  await db.update(schema.productImages)
+    .set({ isPrimary: false })
+    .where(eq(schema.productImages.productId, image.productId))
+  await db.update(schema.productImages)
+    .set({ isPrimary: true })
+    .where(eq(schema.productImages.id, image.id))
+
+  await writeProductImageAudit({
+    admin: input.admin,
+    action: 'product.image.primary',
+    productId: input.publicId,
+    imageId: image.id,
+    imageUrl: image.url,
+    changedFields: ['isPrimary'],
+  })
+
+  return { ok: true as const, productId: input.publicId, imageId: image.id }
+}
+
+export async function updateAdminProductImageAltText(input: {
+  publicId: string
+  imageId: number
+  altEn: string
+  altKm: string
+  admin: { authUserId: string; email: string }
+}) {
+  const db = getDb()
+  const image = await getProductImageById(input.publicId, input.imageId)
+  if (!image) return { ok: false as const, error: 'Image not found for this product.' }
+
+  await db.update(schema.productImages)
+    .set({
+      altEn: input.altEn || null,
+      altKm: input.altKm || null,
+    })
+    .where(eq(schema.productImages.id, image.id))
+
+  await writeProductImageAudit({
+    admin: input.admin,
+    action: 'product.image.alt.update',
+    productId: input.publicId,
+    imageId: image.id,
+    imageUrl: image.url,
+    changedFields: ['altEn', 'altKm'],
+  })
+
+  return { ok: true as const, productId: input.publicId, imageId: image.id }
+}
+
+export async function removeAdminProductImage(input: {
+  publicId: string
+  imageId: number
+  admin: { authUserId: string; email: string }
+}) {
+  const db = getDb()
+  const image = await getProductImageById(input.publicId, input.imageId)
+  if (!image) return { ok: false as const, error: 'Image not found for this product.' }
+
+  await db.delete(schema.productImages)
+    .where(eq(schema.productImages.id, image.id))
+
+  if (image.isPrimary) {
+    const [nextImage] = await db.select({ id: schema.productImages.id })
+      .from(schema.productImages)
+      .where(eq(schema.productImages.productId, image.productId))
+      .orderBy(asc(schema.productImages.sortOrder), asc(schema.productImages.id))
+      .limit(1)
+    if (nextImage) {
+      await db.update(schema.productImages)
+        .set({ isPrimary: true })
+        .where(eq(schema.productImages.id, nextImage.id))
+    }
+  }
+
+  await writeProductImageAudit({
+    admin: input.admin,
+    action: 'product.image.remove',
+    productId: input.publicId,
+    imageId: image.id,
+    imageUrl: image.url,
+    changedFields: ['removed'],
+  })
+
+  return { ok: true as const, productId: input.publicId, imageId: image.id, url: image.url }
 }
 
 export async function getAdminProductAuditSummary(publicId: string, limit = 5): Promise<AdminProductAuditSummary[]> {

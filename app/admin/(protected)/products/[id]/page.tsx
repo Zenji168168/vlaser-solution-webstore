@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { ArrowLeft, Clock3, ExternalLink, Pencil } from 'lucide-react'
 import { getAdminProductAuditSummary, getAdminProductPreview, getStockLabel } from '@/lib/admin/repository'
+import { ProductImagesManager } from './product-images-manager'
 
 interface Props {
   params: Promise<{ id: string }>
@@ -99,6 +100,8 @@ export default async function AdminProductPreviewPage({ params }: Props) {
           </dl>
         </div>
       </section>
+
+      <ProductImagesManager productId={product.id} productName={product.nameEn} images={product.images} />
 
       <div className="grid gap-5 xl:grid-cols-2">
         <TextBlock title="English Description" value={product.descEn || product.shortDescEn} />
