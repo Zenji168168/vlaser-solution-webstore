@@ -54,13 +54,15 @@ export function HomeClient({ categories, featured, catCounts, totalProducts }: P
       <Header />
 
       <section className="premium-gradient relative overflow-hidden border-b border-black/[0.06]">
+        <div className="hero-glow left-[8%] top-24 size-36 bg-cyan-300/45" aria-hidden="true" />
+        <div className="hero-glow right-[10%] top-32 size-44 bg-amber-200/35 [animation-delay:900ms]" aria-hidden="true" />
         <div className="container-page grid grid-cols-1 items-center gap-10 py-14 sm:py-18 lg:grid-cols-12 lg:py-24">
           <div className="lg:col-span-6">
             <div className="inline-flex items-center gap-2 rounded-full border border-cyan-100 bg-white/90 px-3.5 py-1.5 text-xs font-black text-[var(--color-primary)] shadow-sm animate-fade-up">
               <CheckCircle2 className="size-4" aria-hidden="true" />
               {t(`${totalProducts.toLocaleString()} security and network products`, `${totalProducts.toLocaleString()} ផលិតផលសុវត្ថិភាព និងបណ្ដាញ`)}
             </div>
-            <h1 className="mt-6 max-w-3xl text-4xl font-black leading-[1.03] tracking-tight text-[var(--color-ink)] sm:text-6xl lg:text-7xl animate-fade-up delay-1 [overflow-wrap:anywhere]">
+            <h1 className="mt-6 max-w-3xl text-4xl font-black leading-[1.02] tracking-tight text-[var(--color-ink)] sm:text-6xl lg:text-7xl animate-fade-up delay-1 [overflow-wrap:anywhere]">
               {t('Security, network, and smart access products for real projects.', 'ផលិតផលសុវត្ថិភាព បណ្ដាញ និងគ្រប់គ្រងការចូល សម្រាប់គម្រោងពិតប្រាកដ។')}
             </h1>
             <p className="mt-6 max-w-2xl text-base leading-8 text-[var(--color-ink-soft)] sm:text-lg animate-fade-up delay-2">
@@ -123,7 +125,9 @@ export function HomeClient({ categories, featured, catCounts, totalProducts }: P
         </div>
       </section>
 
-      <section className="py-14 sm:py-18 bg-[var(--color-mist)]">
+      <div className="section-divider" aria-hidden="true" />
+
+      <section className="py-16 sm:py-20 bg-[var(--color-mist)]">
         <div className="container-page animate-fade-up">
           <div className="mb-8 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
             <div>
@@ -137,7 +141,7 @@ export function HomeClient({ categories, featured, catCounts, totalProducts }: P
             {cats.map(c => {
               const Icon = categoryIcons[c.name] || Layers
               return (
-                <Link key={c.name} href={`/products?category=${encodeURIComponent(c.name)}`} className="group surface-panel relative flex min-h-[140px] flex-col justify-between p-4 transition-all duration-300 hover:-translate-y-1 hover:border-cyan-100 hover:shadow-lg focus-ring">
+                <Link key={c.name} href={`/products?category=${encodeURIComponent(c.name)}`} className="group surface-panel relative flex min-h-[148px] flex-col justify-between p-5 transition-all duration-300 hover:-translate-y-1 hover:border-cyan-100 hover:shadow-lg focus-ring">
                   <span className="flex size-11 items-center justify-center rounded-xl bg-cyan-50 text-[var(--color-primary)] transition-colors duration-300 group-hover:bg-[var(--color-primary)] group-hover:text-white">
                     <Icon className="size-5" aria-hidden="true" />
                   </span>
@@ -155,7 +159,9 @@ export function HomeClient({ categories, featured, catCounts, totalProducts }: P
         </div>
       </section>
 
-      <section className="py-14 sm:py-18">
+      <div className="section-divider" aria-hidden="true" />
+
+      <section className="py-16 sm:py-20">
         <div className="container-page animate-fade-up">
           <div className="mb-8 flex items-end justify-between gap-4">
             <div>
@@ -171,14 +177,14 @@ export function HomeClient({ categories, featured, catCounts, totalProducts }: P
         </div>
       </section>
 
-      <section className="border-y border-black/[0.06] bg-white py-10">
+      <section className="border-y border-black/[0.06] bg-white py-12">
         <div className="container-page">
           <div className="mb-5 text-center">
             <p className="section-eyebrow">Common brands</p>
           </div>
           <div className="grid gap-3 text-center sm:grid-cols-3 lg:grid-cols-6">
             {['Hikvision', 'UNV', 'ZKTeco', 'HUAWEI', 'EZVIZ', 'ITC'].map(brand => (
-              <Link key={brand} href={`/products?brand=${encodeURIComponent(brand)}`} className="rounded-2xl border border-black/[0.06] bg-stone-50 px-4 py-4 text-sm font-black tracking-wide text-gray-700 transition-all duration-200 hover:-translate-y-0.5 hover:bg-white hover:text-[var(--color-primary)] hover:shadow-sm focus-ring">
+              <Link key={brand} href={`/products?brand=${encodeURIComponent(brand)}`} className="rounded-2xl border border-black/[0.06] bg-[linear-gradient(180deg,#fff,#f8fafc)] px-4 py-4 text-sm font-black tracking-wide text-gray-700 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:bg-white hover:text-[var(--color-primary)] hover:shadow-md focus-ring">
                 {brand}
               </Link>
             ))}
@@ -186,7 +192,7 @@ export function HomeClient({ categories, featured, catCounts, totalProducts }: P
         </div>
       </section>
 
-      <section className="bg-[var(--color-ink)] py-12 text-white sm:py-14">
+      <section className="bg-[var(--color-ink)] py-14 text-white sm:py-16">
         <div className="container-page">
           <div className="grid gap-4 md:grid-cols-3">
             {[

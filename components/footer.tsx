@@ -6,8 +6,8 @@ import { useApp } from '@/components/app-context'
 export function Footer() {
   const { t } = useApp()
   return (
-    <footer className="mt-16 border-t border-black/[0.06] bg-[var(--color-ink)] text-white">
-      <div className="container-page py-12">
+    <footer className="mt-16 border-t border-cyan-300/20 bg-[linear-gradient(180deg,#0f1b2d_0%,var(--color-ink)_18%)] text-white">
+      <div className="container-page py-14 sm:py-16">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-10">
           <div className="col-span-2 md:col-span-1">
             <div className="flex items-center gap-2 mb-3">

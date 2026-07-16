@@ -93,7 +93,7 @@ export function Header() {
 
   return (
     <>
-      <header className={`sticky top-0 z-50 border-b transition-all duration-300 ${scrolled ? 'border-black/10 bg-white/90 shadow-[0_14px_34px_-30px_rgba(17,17,19,0.75)] backdrop-blur-xl' : 'border-transparent bg-white/80 backdrop-blur-md'}`}>
+      <header className={`sticky top-0 z-50 border-b transition-all duration-300 ${scrolled ? 'border-black/10 bg-white/82 shadow-[0_14px_34px_-30px_rgba(17,17,19,0.75)] backdrop-blur-xl' : 'border-transparent bg-white'}`}>
         <div className="container-page">
           <div className="flex items-center justify-between gap-3 h-16 sm:h-[4.5rem]">
             <Link href="/" className="flex items-center gap-2.5 shrink-0 rounded-xl focus-ring" aria-label="Vlaser Store home">
@@ -108,7 +108,7 @@ export function Header() {
             <nav className="hidden xl:flex items-center gap-1 rounded-2xl border border-black/5 bg-white/70 p-1 shadow-sm" aria-label="Primary categories">
               <Link
                 href="/products"
-                className={`px-3 py-2 text-sm rounded-xl transition-colors focus-ring ${pathname === '/products' && !activeCategory ? 'bg-[var(--color-primary-lighter)] text-[var(--color-primary)] font-semibold' : 'text-gray-700 hover:text-gray-950 hover:bg-gray-50'}`}
+                className={`px-3 py-2 text-sm rounded-xl transition-colors focus-ring ${pathname === '/products' && !activeCategory ? 'bg-[var(--color-primary)] text-white font-semibold shadow-sm' : 'text-gray-700 hover:text-gray-950 hover:bg-gray-50'}`}
               >
                 {t('All Products', 'ផលិតផលទាំងអស់')}
               </Link>
@@ -118,7 +118,7 @@ export function Header() {
                   <Link
                     key={cat}
                     href={`/products?category=${encodeURIComponent(cat)}`}
-                    className={`px-3 py-2 text-sm rounded-xl transition-colors focus-ring ${active ? 'bg-[var(--color-primary-lighter)] text-[var(--color-primary)] font-semibold' : 'text-gray-600 hover:text-gray-950 hover:bg-white'}`}
+                    className={`px-3 py-2 text-sm rounded-xl transition-colors focus-ring ${active ? 'bg-[var(--color-primary)] text-white font-semibold shadow-sm' : 'text-gray-600 hover:text-gray-950 hover:bg-white'}`}
                   >
                     {cat}
                   </Link>
@@ -136,7 +136,7 @@ export function Header() {
                   value={searchQuery}
                   onChange={event => setSearchQuery(event.target.value)}
                   placeholder={t('Search products, brands, SKU...', 'ស្វែងរកផលិតផល ម៉ាក ឬ SKU...')}
-                  className="input-field h-11 rounded-2xl pl-10 pr-3 shadow-sm"
+                  className="input-field h-11 rounded-2xl pl-10 pr-3 shadow-sm transition-all duration-200 focus:max-w-none focus:shadow-md"
                 />
               </div>
             </form>
