@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
+import { ArrowRight } from 'lucide-react'
 import { useApp } from '@/components/app-context'
 import type { StorefrontProduct } from '@/lib/types/storefront-product'
 
@@ -53,8 +54,9 @@ export function ProductCard({ product }: { product: StorefrontProduct }) {
               <span className="hidden text-[11px] font-bold text-gray-500 sm:inline">{t('Details', 'លម្អិត')}</span>
             </div>
             <div className="mt-3">
-              <span className="inline-flex min-h-10 w-full min-w-0 items-center justify-center rounded-xl bg-[var(--color-ink)] px-2 text-center text-xs font-bold text-white transition-all duration-200 group-hover:bg-[var(--color-primary)] group-hover:shadow-md sm:px-3">
+              <span className="inline-flex min-h-10 w-full min-w-0 items-center justify-center gap-1.5 rounded-xl bg-[var(--color-ink)] px-2 text-center text-xs font-bold text-white transition-all duration-200 group-hover:bg-[var(--color-primary-dark)] group-hover:shadow-md sm:px-3">
                 {t('View Details', 'មើលលម្អិត')}
+                <ArrowRight className="size-3.5 transition-transform duration-200 group-hover:translate-x-0.5" aria-hidden="true" />
               </span>
             </div>
           </div>
