@@ -34,6 +34,7 @@ export function ProductDetailClient({ product, related }: Props) {
   const [showConfirm, setShowConfirm] = useState(false)
   const [qty, setQty] = useState(1)
   const [fullscreen, setFullscreen] = useState(false)
+  const [activeImage, setActiveImage] = useState(product.image)
   const [recentProducts, setRecentProducts] = useState<StorefrontProduct[]>([])
   const orderButtonRef = useRef<HTMLButtonElement>(null)
   const modalRef = useRef<HTMLDivElement>(null)
@@ -43,6 +44,7 @@ export function ProductDetailClient({ product, related }: Props) {
 
   useEffect(() => {
     setQty(1)
+    setActiveImage(product.image)
     addToRecentlyViewed(product.id)
     const ids = getRecentlyViewed().filter(id => id !== product.id).slice(0, 4)
     if (!ids.length) {
@@ -116,6 +118,7 @@ export function ProductDetailClient({ product, related }: Props) {
   const productUrl = typeof window !== 'undefined' ? window.location.href : `https://store.vlasersolution.com/products/${product.id}`
   const totalDisplay = formatPrice(product.price * qty)
   const unitDisplay = formatPrice(product.price)
+  const productImages = Array.from(new Set([product.image].filter(Boolean)))
 
   const changeQty = (delta: number) => {
     setQty(current => Math.min(maxQty, Math.max(1, current + delta)))
@@ -157,7 +160,7 @@ export function ProductDetailClient({ product, related }: Props) {
     <div className="min-h-screen flex flex-col bg-white">
       <Header />
       <main className="flex-grow">
-        <div className="container-page py-5 sm:py-8">
+        <div className="container-page py-6 sm:py-10">
           <nav className="mb-5 flex min-w-0 items-center gap-1.5 text-xs text-gray-500 sm:mb-6">
             <Link href="/" className="hover:text-gray-950 focus-ring rounded-md">{t('Home', 'ទំព័រដើម')}</Link>
             <span className="text-gray-300">/</span>
@@ -168,36 +171,50 @@ export function ProductDetailClient({ product, related }: Props) {
             <span className="truncate text-gray-700">{product.sku}</span>
           </nav>
 
-          <div className="grid grid-cols-1 gap-7 lg:grid-cols-[minmax(0,1fr)_minmax(420px,0.9fr)] lg:gap-12">
+          <div className="grid grid-cols-1 gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(420px,0.86fr)] lg:gap-12">
             <div className="relative">
               <button
                 type="button"
                 onClick={() => setFullscreen(true)}
-                className="group relative flex aspect-square w-full items-center justify-center overflow-hidden rounded-3xl border border-gray-200 bg-gray-50 p-6 transition-shadow duration-300 hover:shadow-lg focus-ring sm:p-10"
+                className="group relative flex aspect-square w-full items-center justify-center overflow-hidden rounded-[2rem] border border-black/[0.07] bg-[linear-gradient(180deg,#fafafa_0%,#efefed_100%)] p-6 transition-all duration-300 hover:shadow-lg focus-ring sm:p-10"
                 aria-label={t('Open product image viewer', 'បើកមើលរូបភាពផលិតផល')}
               >
-                <img src={product.image} alt={cleanText(product.name)} className="max-h-full max-w-full object-contain transition-transform duration-300 group-hover:scale-[1.025]" onError={event => { (event.currentTarget as HTMLImageElement).src = '/placeholder.svg' }} />
+                <div className="absolute inset-x-12 bottom-7 h-14 rounded-full bg-black/10 blur-3xl" aria-hidden="true" />
+                <img src={activeImage} alt={cleanText(product.name)} className="relative max-h-full max-w-full object-contain transition-transform duration-300 group-hover:scale-[1.025]" onError={event => { (event.currentTarget as HTMLImageElement).src = '/placeholder.svg' }} />
                 <span className={`badge ${badge.className} absolute left-4 top-4 shadow-sm`}>{badge.label}</span>
                 <span className="absolute bottom-4 right-4 hidden items-center gap-1 rounded-full bg-white px-3 py-1.5 text-xs font-bold text-gray-700 shadow-sm sm:flex">
                   <ZoomIn className="size-3.5" aria-hidden="true" />
                   {t('Zoom', 'ពង្រីក')}
                 </span>
               </button>
+              <div className="mt-4 flex gap-3 overflow-x-auto pb-1">
+                {productImages.map((image, index) => (
+                  <button
+                    key={`${image}-${index}`}
+                    type="button"
+                    onClick={() => setActiveImage(image)}
+                    className={`flex size-20 shrink-0 items-center justify-center rounded-2xl border bg-white p-2 transition-all duration-200 focus-ring ${activeImage === image ? 'border-[var(--color-primary)] shadow-md' : 'border-black/[0.08] hover:border-black/20'}`}
+                    aria-label={t('Show product image', 'បង្ហាញរូបភាពផលិតផល')}
+                  >
+                    <img src={image} alt="" className="max-h-full max-w-full object-contain" onError={event => { (event.currentTarget as HTMLImageElement).src = '/placeholder.svg' }} />
+                  </button>
+                ))}
+              </div>
             </div>
 
-            <section className="min-w-0 lg:pt-2">
+            <section className="min-w-0 lg:sticky lg:top-28 lg:self-start">
               <p className="text-xs font-black uppercase tracking-wider text-[var(--color-primary)]">{product.brand}</p>
-              <h1 className="mt-2 max-w-full break-words text-2xl font-black leading-tight tracking-tight text-gray-950 sm:text-3xl lg:text-4xl [overflow-wrap:anywhere]">{cleanText(product.name)}</h1>
+              <h1 className="mt-2 max-w-full break-words text-3xl font-black leading-tight tracking-tight text-[var(--color-ink)] sm:text-4xl lg:text-5xl [overflow-wrap:anywhere]">{cleanText(product.name)}</h1>
               <div className="mt-3 flex flex-wrap items-center gap-2 text-xs text-gray-500">
                 <Link href={`/products?category=${encodeURIComponent(product.category)}`} className="rounded-full bg-gray-50 px-2.5 py-1 font-semibold text-gray-700 hover:bg-gray-100 focus-ring">{product.category}</Link>
                 <span className="rounded-full bg-gray-50 px-2.5 py-1 font-mono">SKU: {product.sku}</span>
               </div>
 
-              <div className="mt-6 rounded-3xl border border-gray-100 bg-gray-50/60 p-4 sm:p-5">
+              <div className="mt-6 rounded-[1.75rem] border border-black/[0.07] bg-white p-4 shadow-sm sm:p-5">
                 <div className="flex flex-wrap items-end justify-between gap-3 border-b border-gray-100 pb-5">
                   <div>
                     <p className="text-xs font-bold uppercase tracking-wider text-gray-500">{t('Unit price', 'តម្លៃក្នុងមួយឯកតា')}</p>
-                    <p className="mt-1 text-3xl font-black text-gray-950">{unitDisplay}</p>
+                    <p className="mt-1 text-4xl font-black text-[var(--color-ink)]">{unitDisplay}</p>
                   </div>
                   {product.qty > 0 && <span className="text-sm font-semibold text-gray-500">{product.qty} {t('available', 'មាន')}</span>}
                 </div>
@@ -260,14 +277,14 @@ export function ProductDetailClient({ product, related }: Props) {
                   <p className="mt-1 text-sm text-gray-500">{t('Similar products from the live catalog.', 'ផលិតផលស្រដៀងគ្នាពីបញ្ជីបច្ចុប្បន្ន។')}</p>
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">{related.map(item => <ProductCard key={item.id} product={item} />)}</div>
+              <div className="grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-4">{related.map(item => <ProductCard key={item.id} product={item} />)}</div>
             </section>
           )}
 
           {recentProducts.length > 0 && (
             <section className="mt-14 border-t border-gray-100 pt-8">
               <h2 className="text-xl font-black text-gray-950">{t('Recently Viewed', 'បានមើលថ្មីៗ')}</h2>
-              <div className="mt-6 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">{recentProducts.map(item => <ProductCard key={item.id} product={item} />)}</div>
+              <div className="mt-6 grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-4">{recentProducts.map(item => <ProductCard key={item.id} product={item} />)}</div>
             </section>
           )}
         </div>
@@ -278,7 +295,7 @@ export function ProductDetailClient({ product, related }: Props) {
           <button type="button" className="absolute right-4 top-4 tap-target inline-flex items-center justify-center rounded-full bg-white/10 text-white transition-colors hover:bg-white/20 focus-ring" aria-label={t('Close image viewer', 'បិទរូបភាព')}>
             <X className="size-5" />
           </button>
-          <img src={product.image} alt={product.name} className="max-h-full max-w-full object-contain animate-scale-in" onError={event => { (event.currentTarget as HTMLImageElement).src = '/placeholder.svg' }} />
+          <img src={activeImage} alt={product.name} className="max-h-full max-w-full object-contain animate-scale-in" onError={event => { (event.currentTarget as HTMLImageElement).src = '/placeholder.svg' }} />
         </div>
       )}
 

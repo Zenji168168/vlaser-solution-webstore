@@ -93,17 +93,19 @@ export function Header() {
 
   return (
     <>
-      <header className={`sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b transition-shadow duration-300 ${scrolled ? 'border-gray-200 shadow-md' : 'border-gray-100 shadow-sm'}`}>
+      <header className={`sticky top-0 z-50 border-b transition-all duration-300 ${scrolled ? 'border-black/10 bg-white/90 shadow-[0_14px_34px_-30px_rgba(17,17,19,0.75)] backdrop-blur-xl' : 'border-transparent bg-white/80 backdrop-blur-md'}`}>
         <div className="container-page">
-          <div className="flex items-center justify-between gap-3 h-14 sm:h-16">
+          <div className="flex items-center justify-between gap-3 h-16 sm:h-[4.5rem]">
             <Link href="/" className="flex items-center gap-2.5 shrink-0 rounded-xl focus-ring" aria-label="Vlaser Store home">
-              <img src="/vlaser-logo.png" alt="Vlaser" className="h-8 sm:h-9 w-auto object-contain" />
-              <span className="hidden sm:block text-base font-extrabold tracking-tight text-gray-950">
+              <span className="flex size-10 items-center justify-center rounded-2xl bg-white shadow-sm ring-1 ring-black/5">
+                <img src="/vlaser-logo.png" alt="Vlaser" className="h-7 w-auto object-contain" />
+              </span>
+              <span className="hidden sm:block text-base font-black tracking-tight text-gray-950">
                 Vlaser <span className="text-[var(--color-primary)]">Store</span>
               </span>
             </Link>
 
-            <nav className="hidden xl:flex items-center gap-1" aria-label="Primary categories">
+            <nav className="hidden xl:flex items-center gap-1 rounded-2xl border border-black/5 bg-white/70 p-1 shadow-sm" aria-label="Primary categories">
               <Link
                 href="/products"
                 className={`px-3 py-2 text-sm rounded-xl transition-colors focus-ring ${pathname === '/products' && !activeCategory ? 'bg-[var(--color-primary-lighter)] text-[var(--color-primary)] font-semibold' : 'text-gray-700 hover:text-gray-950 hover:bg-gray-50'}`}
@@ -116,7 +118,7 @@ export function Header() {
                   <Link
                     key={cat}
                     href={`/products?category=${encodeURIComponent(cat)}`}
-                    className={`px-3 py-2 text-sm rounded-xl transition-colors focus-ring ${active ? 'bg-[var(--color-primary-lighter)] text-[var(--color-primary)] font-semibold' : 'text-gray-600 hover:text-gray-950 hover:bg-gray-50'}`}
+                    className={`px-3 py-2 text-sm rounded-xl transition-colors focus-ring ${active ? 'bg-[var(--color-primary-lighter)] text-[var(--color-primary)] font-semibold' : 'text-gray-600 hover:text-gray-950 hover:bg-white'}`}
                   >
                     {cat}
                   </Link>
@@ -124,7 +126,7 @@ export function Header() {
               })}
             </nav>
 
-            <form onSubmit={handleSearch} className="hidden lg:block flex-1 max-w-[18rem]">
+            <form onSubmit={handleSearch} className="hidden lg:block flex-1 max-w-[24rem]">
               <label className="sr-only" htmlFor="site-search">{t('Search products', 'ស្វែងរកផលិតផល')}</label>
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-gray-400" aria-hidden="true" />
@@ -134,7 +136,7 @@ export function Header() {
                   value={searchQuery}
                   onChange={event => setSearchQuery(event.target.value)}
                   placeholder={t('Search products, brands, SKU...', 'ស្វែងរកផលិតផល ម៉ាក ឬ SKU...')}
-                  className="input-field h-10 pl-9 pr-3"
+                  className="input-field h-11 rounded-2xl pl-10 pr-3 shadow-sm"
                 />
               </div>
             </form>
@@ -153,7 +155,7 @@ export function Header() {
               <button
                 type="button"
                 onClick={() => setLang(lang === 'en' ? 'km' : 'en')}
-                className="tap-target inline-flex items-center justify-center gap-1.5 rounded-xl border border-gray-200 px-2.5 text-xs font-bold text-gray-700 hover:border-gray-300 hover:bg-gray-50 focus-ring"
+                className="tap-target inline-flex items-center justify-center gap-1.5 rounded-xl border border-black/10 bg-white px-2.5 text-xs font-bold text-gray-700 shadow-sm hover:border-black/20 hover:bg-stone-50 focus-ring"
                 title={lang === 'en' ? 'ប្តូរទៅខ្មែរ' : 'Switch to English'}
               >
                 <Languages className="size-3.5" aria-hidden="true" />
@@ -163,7 +165,7 @@ export function Header() {
               <button
                 type="button"
                 onClick={() => setCurrency(currency === 'USD' ? 'KHR' : 'USD')}
-                className="tap-target hidden sm:inline-flex items-center justify-center rounded-xl border border-gray-200 px-2.5 text-xs font-bold text-gray-700 hover:border-gray-300 hover:bg-gray-50 focus-ring"
+                className="tap-target hidden sm:inline-flex items-center justify-center rounded-xl border border-black/10 bg-white px-2.5 text-xs font-bold text-gray-700 shadow-sm hover:border-black/20 hover:bg-stone-50 focus-ring"
                 title={currency === 'USD' ? 'Show KHR' : 'Show USD'}
               >
                 {currency === 'USD' ? 'KHR' : 'USD'}
@@ -220,7 +222,7 @@ export function Header() {
       {mobileOpen && (
         <div className="fixed inset-0 z-[100] xl:hidden" role="dialog" aria-modal="true" aria-label={t('Mobile navigation', 'ម៉ឺនុយទូរស័ព្ទ')}>
           <button type="button" className="absolute inset-0 bg-black/35 backdrop-blur-[2px] animate-fade-in" onClick={closeMobile} aria-label={t('Close menu overlay', 'បិទម៉ឺនុយ')} />
-          <div ref={drawerRef} className="absolute right-0 top-0 bottom-0 flex w-[min(88vw,360px)] flex-col bg-white shadow-xl animate-drawer-in">
+              <div ref={drawerRef} className="absolute right-0 top-0 bottom-0 flex w-[min(88vw,380px)] flex-col bg-white shadow-xl animate-drawer-in">
             <div className="flex items-center justify-between gap-3 border-b border-gray-100 p-4">
               <Link href="/" onClick={closeMobile} className="flex items-center gap-2 rounded-xl focus-ring">
                 <img src="/vlaser-logo.png" alt="Vlaser" className="h-8 w-auto object-contain" />
