@@ -171,16 +171,16 @@ export function ProductDetailClient({ product, related }: Props) {
             <span className="truncate text-gray-700">{product.sku}</span>
           </nav>
 
-          <div className="grid grid-cols-1 gap-8 lg:grid-cols-[minmax(0,1.08fr)_minmax(420px,0.82fr)] lg:gap-12">
+          <div className="grid grid-cols-1 gap-8 lg:grid-cols-[minmax(0,0.98fr)_minmax(420px,0.9fr)] lg:gap-10">
             <div className="relative">
               <button
                 type="button"
                 onClick={() => setFullscreen(true)}
-                className="group relative flex aspect-square w-full items-center justify-center overflow-hidden rounded-[2rem] border border-black/[0.07] bg-[linear-gradient(180deg,#fbfdff_0%,#eef3f4_100%)] p-5 transition-all duration-300 hover:shadow-lg focus-ring sm:p-8 lg:p-10"
+                className="group relative flex aspect-[1.04/1] w-full items-center justify-center overflow-hidden rounded-[2rem] border border-black/[0.07] bg-[linear-gradient(180deg,#fbfdff_0%,#eef3f4_100%)] p-5 transition-all duration-200 hover:shadow-md focus-ring sm:p-8 lg:p-9"
                 aria-label={t('Open product image viewer', 'បើកមើលរូបភាពផលិតផល')}
               >
-                <div className="absolute inset-x-12 bottom-7 h-14 rounded-full bg-black/10 blur-3xl" aria-hidden="true" />
-                <img src={activeImage} alt={cleanText(product.name)} className="relative max-h-[94%] max-w-[94%] object-contain transition-transform duration-300 group-hover:scale-[1.03]" onError={event => { (event.currentTarget as HTMLImageElement).src = '/placeholder.svg' }} />
+                <div className="absolute inset-x-14 bottom-8 h-12 rounded-full bg-black/10 blur-3xl" aria-hidden="true" />
+                <img src={activeImage} alt={cleanText(product.name)} className="relative max-h-[88%] max-w-[90%] object-contain transition-transform duration-200 group-hover:scale-[1.015]" onError={event => { (event.currentTarget as HTMLImageElement).src = '/placeholder.svg' }} />
                 <span className={`badge ${badge.className} absolute left-4 top-4 shadow-sm`}>{badge.label}</span>
                 <span className="absolute bottom-4 right-4 hidden items-center gap-1 rounded-full bg-white px-3 py-1.5 text-xs font-bold text-gray-700 shadow-sm sm:flex">
                   <ZoomIn className="size-3.5" aria-hidden="true" />
@@ -193,7 +193,7 @@ export function ProductDetailClient({ product, related }: Props) {
                     key={`${image}-${index}`}
                     type="button"
                     onClick={() => setActiveImage(image)}
-                    className={`flex size-20 shrink-0 items-center justify-center rounded-2xl border bg-white p-2 transition-all duration-200 focus-ring ${activeImage === image ? 'border-[var(--color-primary)] shadow-md ring-2 ring-cyan-100' : 'border-black/[0.08] hover:border-black/20 hover:shadow-sm'}`}
+                    className={`flex size-20 shrink-0 items-center justify-center rounded-2xl border-2 bg-white p-2 transition-all duration-200 focus-ring ${activeImage === image ? 'border-[var(--color-primary)] shadow-sm ring-2 ring-cyan-100' : 'border-transparent ring-1 ring-black/[0.08] hover:border-cyan-200 hover:ring-cyan-100'}`}
                     aria-label={t('Show product image', 'បង្ហាញរូបភាពផលិតផល')}
                   >
                     <img src={image} alt="" className="max-h-full max-w-full object-contain" onError={event => { (event.currentTarget as HTMLImageElement).src = '/placeholder.svg' }} />
@@ -202,24 +202,24 @@ export function ProductDetailClient({ product, related }: Props) {
               </div>
             </div>
 
-            <section className="min-w-0 lg:sticky lg:top-28 lg:self-start">
+            <section className="min-w-0 lg:sticky lg:top-24 lg:self-start">
               <p className="text-xs font-black uppercase tracking-wider text-[var(--color-primary)]">{product.brand}</p>
               <h1 className="mt-2 max-w-full break-words text-3xl font-black leading-tight tracking-tight text-[var(--color-ink)] sm:text-4xl lg:text-5xl [overflow-wrap:anywhere]">{cleanText(product.name)}</h1>
-              <div className="mt-3 flex flex-wrap items-center gap-2 text-xs text-gray-500">
+              <div className="mt-4 flex flex-wrap items-center gap-2 text-xs text-gray-500">
                 <Link href={`/products?category=${encodeURIComponent(product.category)}`} className="rounded-full bg-gray-50 px-2.5 py-1 font-semibold text-gray-700 hover:bg-gray-100 focus-ring">{product.category}</Link>
                 <span className="rounded-full bg-gray-50 px-2.5 py-1 font-mono">SKU: {product.sku}</span>
               </div>
 
-              <div className="mt-6 rounded-[1.75rem] border border-black/[0.07] bg-white p-4 shadow-lg shadow-slate-900/5 sm:p-5">
-                <div className="flex flex-wrap items-end justify-between gap-3 border-b border-gray-100 pb-5">
+              <div className="mt-7 rounded-[1.5rem] border border-black/[0.06] bg-white p-4 shadow-sm sm:p-5">
+                <div className="flex flex-wrap items-end justify-between gap-4 border-b border-gray-100 pb-6">
                   <div>
                     <p className="text-xs font-bold uppercase tracking-wider text-gray-500">{t('Unit price', 'តម្លៃក្នុងមួយឯកតា')}</p>
-                    <p className="mt-1 text-4xl font-black text-[var(--color-ink)]">{unitDisplay}</p>
+                    <p className="mt-2 text-4xl font-black tracking-tight text-[var(--color-ink)]">{unitDisplay}</p>
                   </div>
                   {product.qty > 0 && <span className="text-sm font-semibold text-gray-500">{product.qty} {t('available', 'មាន')}</span>}
                 </div>
 
-                <div className="pt-5">
+                <div className="pt-6">
                   <label className="mb-2 block text-sm font-bold text-gray-950" htmlFor="quantity-display">{t('Quantity', 'ចំនួន')}</label>
                   <div className="flex items-center gap-3">
                     <div className="inline-flex overflow-hidden rounded-2xl border border-gray-200 bg-white">
@@ -231,7 +231,7 @@ export function ProductDetailClient({ product, related }: Props) {
                   </div>
                 </div>
 
-                <div className="mt-5 grid gap-3 sm:grid-cols-[1fr_auto]">
+                <div className="mt-6 grid gap-3 sm:grid-cols-[1fr_auto]">
                   <button ref={orderButtonRef} onClick={() => setShowConfirm(true)} className="btn-primary h-12 w-full text-sm">
                     <ShoppingBag className="size-4" aria-hidden="true" />
                     {t('Order Now', 'បញ្ជាទិញឥឡូវ')}
@@ -243,7 +243,7 @@ export function ProductDetailClient({ product, related }: Props) {
                 </div>
               </div>
 
-              <div className="mt-7">
+              <div className="mt-8">
                 <h2 className="text-base font-black text-gray-950">{t('Description', 'ការពិពណ៌នា')}</h2>
                 {hasRealDescription ? (
                   desc.type === 'list' ? (

@@ -38,8 +38,8 @@
   --shadow-xl: 0 30px 70px -42px rgba(17,17,19,0.55), 0 14px 30px -26px rgba(17,17,19,0.38);
   --transition-fast: 160ms var(--ease-store);
   --transition-base: 220ms var(--ease-store);
-  --transition-slow: 320ms var(--ease-store);
-  --transition-spring: 400ms var(--ease-store);
+  --transition-slow: 300ms var(--ease-store);
+  --transition-spring: 360ms var(--ease-store);
   --container-sm: 640px;
   --container-md: 768px;
   --container-lg: 1024px;
@@ -56,7 +56,7 @@
       radial-gradient(circle at top left, rgba(14,116,144,0.08), transparent 34rem),
       linear-gradient(180deg, #fff 0%, #fafafa 42%, #fff 100%);
   }
-  :focus-visible { outline: 2px solid color-mix(in srgb, var(--color-primary) 70%, white); outline-offset: 3px; }
+  :focus-visible { outline: 2px solid color-mix(in srgb, var(--color-primary) 78%, white); outline-offset: 3px; }
 
   /* Khmer language mode */
   html[lang="km"] body,
@@ -95,10 +95,10 @@
   .card {
     @apply bg-white border border-black/[0.07] rounded-2xl overflow-hidden;
     box-shadow: var(--shadow-sm);
-    transition: transform 260ms var(--ease-store), box-shadow 260ms var(--ease-store), border-color 260ms var(--ease-store);
+    transition: transform var(--transition-base), box-shadow var(--transition-base), border-color var(--transition-base);
   }
   @media (hover: hover) and (pointer: fine) {
-    .card:hover { box-shadow: var(--shadow-lg); transform: translateY(-6px); border-color: rgba(14,116,144,0.2); }
+    .card:hover { box-shadow: var(--shadow-md); transform: translateY(-3px); border-color: rgba(14,116,144,0.18); }
   }
 
   .badge { @apply inline-flex items-center px-2.5 py-0.5 text-[10px] font-semibold rounded-lg; }
@@ -138,19 +138,19 @@
     background: linear-gradient(90deg, transparent, rgba(14,116,144,0.18), transparent);
     height: 1px;
   }
-  .focus-ring { @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)]/30 focus-visible:ring-offset-2; }
+  .focus-ring { @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)]/45 focus-visible:ring-offset-2; }
   .tap-target { min-height: 44px; min-width: 44px; }
   .no-scrollbar { scrollbar-width: none; }
   .no-scrollbar::-webkit-scrollbar { display: none; }
 }
 
 /* === ANIMATIONS === */
-@keyframes fadeUp { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
+@keyframes fadeUp { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
 @keyframes fadeIn { from{opacity:0} to{opacity:1} }
 @keyframes scaleIn { from{opacity:0;transform:scale(0.97)} to{opacity:1;transform:scale(1)} }
 @keyframes slideDown { from{opacity:0;transform:translateY(-8px)} to{opacity:1;transform:translateY(0)} }
-@keyframes drawerIn { from{opacity:0;transform:translateX(18px)} to{opacity:1;transform:translateX(0)} }
-@keyframes sheetIn { from{opacity:0;transform:translateY(18px)} to{opacity:1;transform:translateY(0)} }
+@keyframes drawerIn { from{opacity:0;transform:translateX(14px)} to{opacity:1;transform:translateX(0)} }
+@keyframes sheetIn { from{opacity:0;transform:translateY(14px)} to{opacity:1;transform:translateY(0)} }
 @keyframes slideLeft { 0%{transform:translateX(0)} 100%{transform:translateX(-50%)} }
 @keyframes skeleton { 0%{background-position:-200px 0} 100%{background-position:calc(200px + 100%) 0} }
 @keyframes premiumGlow {
@@ -162,12 +162,12 @@
   to { transform: translate3d(14px,-12px,0) scale(1.04); }
 }
 
-.animate-fade-up { animation: fadeUp 0.5s var(--transition-spring) both; }
-.animate-fade-in { animation: fadeIn 0.4s ease both; }
-.animate-scale-in { animation: scaleIn 0.3s var(--transition-spring) both; }
-.animate-slide-down { animation: slideDown 0.3s var(--transition-spring) both; }
-.animate-drawer-in { animation: drawerIn 0.32s var(--ease-store) both; }
-.animate-sheet-in { animation: sheetIn 0.32s var(--ease-store) both; }
+.animate-fade-up { animation: fadeUp 0.36s var(--transition-spring) both; }
+.animate-fade-in { animation: fadeIn 0.28s ease both; }
+.animate-scale-in { animation: scaleIn 0.24s var(--transition-spring) both; }
+.animate-slide-down { animation: slideDown 0.24s var(--transition-spring) both; }
+.animate-drawer-in { animation: drawerIn 0.3s var(--ease-store) both; }
+.animate-sheet-in { animation: sheetIn 0.3s var(--ease-store) both; }
 .animate-marquee { animation: slideLeft 45s linear infinite; }
 .animate-marquee:hover { animation-play-state: paused; }
 

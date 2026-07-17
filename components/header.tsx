@@ -93,9 +93,9 @@ export function Header() {
 
   return (
     <>
-      <header className={`sticky top-0 z-50 border-b transition-all duration-300 ${scrolled ? 'border-black/10 bg-white/82 shadow-[0_14px_34px_-30px_rgba(17,17,19,0.75)] backdrop-blur-xl' : 'border-transparent bg-white'}`}>
+      <header className={`sticky top-0 z-50 border-b transition-all duration-300 ${scrolled ? 'border-black/10 bg-white/85 shadow-[0_12px_28px_-26px_rgba(17,17,19,0.65)] backdrop-blur-xl' : 'border-transparent bg-white'}`}>
         <div className="container-page">
-          <div className="flex items-center justify-between gap-3 h-16 sm:h-[4.5rem]">
+          <div className="flex h-[3.75rem] items-center justify-between gap-2.5 sm:h-16">
             <Link href="/" className="flex items-center gap-2.5 shrink-0 rounded-xl focus-ring" aria-label="Vlaser Store home">
               <span className="flex size-10 items-center justify-center rounded-2xl bg-white shadow-sm ring-1 ring-black/5">
                 <img src="/vlaser-logo.png" alt="Vlaser" className="h-7 w-auto object-contain" />
@@ -108,7 +108,7 @@ export function Header() {
             <nav className="hidden xl:flex items-center gap-1 rounded-2xl border border-black/5 bg-white/70 p-1 shadow-sm" aria-label="Primary categories">
               <Link
                 href="/products"
-                className={`px-3 py-2 text-sm rounded-xl transition-colors focus-ring ${pathname === '/products' && !activeCategory ? 'bg-[var(--color-primary)] text-white font-semibold shadow-sm' : 'text-gray-700 hover:text-gray-950 hover:bg-gray-50'}`}
+                  className={`px-3 py-1.5 text-sm rounded-xl transition-colors focus-ring ${pathname === '/products' && !activeCategory ? 'bg-[var(--color-primary)] text-white font-semibold shadow-sm' : 'text-gray-700 hover:text-gray-950 hover:bg-gray-50'}`}
               >
                 {t('All Products', 'ផលិតផលទាំងអស់')}
               </Link>
@@ -118,7 +118,7 @@ export function Header() {
                   <Link
                     key={cat}
                     href={`/products?category=${encodeURIComponent(cat)}`}
-                    className={`px-3 py-2 text-sm rounded-xl transition-colors focus-ring ${active ? 'bg-[var(--color-primary)] text-white font-semibold shadow-sm' : 'text-gray-600 hover:text-gray-950 hover:bg-white'}`}
+                    className={`px-3 py-1.5 text-sm rounded-xl transition-colors focus-ring ${active ? 'bg-[var(--color-primary)] text-white font-semibold shadow-sm' : 'text-gray-600 hover:text-gray-950 hover:bg-white'}`}
                   >
                     {cat}
                   </Link>
@@ -136,7 +136,7 @@ export function Header() {
                   value={searchQuery}
                   onChange={event => setSearchQuery(event.target.value)}
                   placeholder={t('Search products, brands, SKU...', 'ស្វែងរកផលិតផល ម៉ាក ឬ SKU...')}
-                  className="input-field h-11 rounded-2xl pl-10 pr-3 shadow-sm transition-all duration-200 focus:max-w-none focus:shadow-md"
+                  className="input-field h-10 rounded-2xl pl-10 pr-3 shadow-sm transition-all duration-200 focus:shadow-[0_0_0_4px_rgba(14,116,144,0.08)]"
                 />
               </div>
             </form>
@@ -171,12 +171,12 @@ export function Header() {
                 {currency === 'USD' ? 'KHR' : 'USD'}
               </button>
 
-              <a href={TELEGRAM_URL} target="_blank" rel="noopener noreferrer" className="hidden md:inline-flex btn-secondary h-10 px-3 text-xs">
+              <a href={TELEGRAM_URL} target="_blank" rel="noopener noreferrer" className="hidden md:inline-flex btn-secondary h-9 px-3 text-xs">
                 <MessageCircle className="size-4" aria-hidden="true" />
                 {t('Contact Sales', 'ទាក់ទងផ្នែកលក់')}
               </a>
 
-              <Link href="/products" className="hidden sm:inline-flex btn-primary h-10 px-4 text-xs">
+              <Link href="/products" className="hidden sm:inline-flex btn-primary h-9 px-4 text-xs">
                 <ShoppingBag className="size-4" aria-hidden="true" />
                 {t('Shop', 'ទិញ')}
               </Link>
@@ -234,16 +234,16 @@ export function Header() {
             </div>
 
             <div className="overflow-y-auto p-4">
-              <form onSubmit={handleSearch} className="mb-4">
+              <form onSubmit={handleSearch} className="mb-5">
                 <label className="sr-only" htmlFor="drawer-search">{t('Search products', 'ស្វែងរកផលិតផល')}</label>
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-gray-400" aria-hidden="true" />
-                  <input id="drawer-search" type="search" value={searchQuery} onChange={event => setSearchQuery(event.target.value)} placeholder={t('Search store', 'ស្វែងរក')} className="input-field pl-9" />
+                  <input id="drawer-search" type="search" value={searchQuery} onChange={event => setSearchQuery(event.target.value)} placeholder={t('Search store', 'ស្វែងរក')} className="input-field min-h-11 pl-9" />
                 </div>
               </form>
 
-              <nav className="space-y-1" aria-label="Mobile categories">
-                <Link href="/products" onClick={closeMobile} className="flex min-h-11 items-center rounded-xl px-3 text-sm font-semibold text-gray-950 hover:bg-gray-50 focus-ring">
+              <nav className="space-y-1.5 rounded-2xl border border-black/[0.06] bg-stone-50/60 p-2" aria-label="Mobile categories">
+                <Link href="/products" onClick={closeMobile} className={`flex min-h-12 items-center rounded-xl px-3 text-sm font-semibold focus-ring ${pathname === '/products' && !activeCategory ? 'bg-white text-[var(--color-primary)] shadow-sm ring-1 ring-cyan-100' : 'text-gray-950 hover:bg-white'}`}>
                   {t('All Products', 'ផលិតផលទាំងអស់')}
                 </Link>
                 {HEADER_CATEGORIES.map((cat, index) => (
@@ -251,7 +251,7 @@ export function Header() {
                     key={cat}
                     href={`/products?category=${encodeURIComponent(cat)}`}
                     onClick={closeMobile}
-                    className={`flex min-h-11 items-center rounded-xl px-3 text-sm transition-colors focus-ring ${activeCategory === cat ? 'bg-[var(--color-primary-lighter)] text-[var(--color-primary)] font-semibold' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-950'}`}
+                    className={`flex min-h-12 items-center rounded-xl px-3 text-sm transition-colors focus-ring ${activeCategory === cat ? 'bg-white text-[var(--color-primary)] font-semibold shadow-sm ring-1 ring-cyan-100' : 'text-gray-600 hover:bg-white hover:text-gray-950'}`}
                     style={{ animationDelay: `${index * 18}ms` }}
                   >
                     {cat}

@@ -32,16 +32,16 @@ export function ProductSpecifications({ brand, category, sku, status, qty, descr
   ]
 
   return (
-    <div className="surface-panel overflow-hidden rounded-[1.5rem] shadow-md shadow-slate-900/5">
-      <div className="border-b border-black/[0.06] bg-[linear-gradient(180deg,#f8fafc,#f1f5f9)] px-5 py-5">
+    <div className="surface-panel overflow-hidden rounded-[1.5rem] shadow-sm">
+      <div className="border-b border-black/[0.06] bg-slate-50 px-5 py-5">
         <p className="section-eyebrow">Product data</p>
         <h3 className="mt-1 text-base font-black text-gray-950">{t('Specifications', 'លក្ខណៈបច្ចេកទេស')}</h3>
       </div>
       <div className="divide-y divide-black/[0.06]">
         {specs.map(({ key, value }) => (
-          <div key={key} className="flex flex-col gap-1 px-5 py-4 text-sm sm:flex-row sm:items-center sm:justify-between sm:gap-4 odd:bg-slate-50/45">
-            <span className="font-semibold text-gray-500">{LABELS[key]?.[lang] || key}</span>
-            <span className="font-bold text-gray-950 sm:max-w-[60%] sm:text-right sm:truncate">{cleanText(value)}</span>
+          <div key={key} className="grid gap-1 px-5 py-4 text-sm odd:bg-slate-50/55 sm:grid-cols-[minmax(10rem,0.42fr)_1fr] sm:gap-6">
+            <span className="font-bold text-gray-600">{LABELS[key]?.[lang] || key}</span>
+            <span className="min-w-0 break-words font-black text-gray-950 sm:text-right">{cleanText(value)}</span>
           </div>
         ))}
       </div>

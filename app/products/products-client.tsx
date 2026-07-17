@@ -135,25 +135,25 @@ export function ProductsClient({
     <div className="min-h-screen flex flex-col bg-white">
       <Header />
       <main className="flex-grow">
-        <div className="container-page py-6 sm:py-10">
-          <nav className="flex items-center gap-1.5 text-xs text-gray-500 mb-5">
+        <div className="container-page py-5 sm:py-10">
+          <nav className="mb-5 flex items-center gap-1.5 text-xs text-gray-500 sm:mb-6">
             <Link href="/" className="hover:text-gray-950 transition-colors focus-ring rounded-md">{t('Home', 'ទំព័រដើម')}</Link>
             <span className="text-gray-300">/</span>
             <span className="text-gray-950 font-semibold">{t('Products', 'ផលិតផល')}</span>
             {category !== 'All' && <><span className="text-gray-300">/</span><span className="text-gray-700 truncate">{category}</span></>}
           </nav>
 
-          <div className="mb-6 rounded-[1.75rem] border border-black/[0.06] bg-white p-5 shadow-sm sm:p-6 lg:p-7">
-            <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+          <div className="mb-5 rounded-[1.75rem] border border-black/[0.06] bg-white p-5 shadow-sm sm:mb-7 sm:p-6 lg:p-7">
+            <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
               <div>
                 <p className="section-eyebrow mb-2">{t('Live product catalog', 'បញ្ជីផលិតផលបច្ចុប្បន្ន')}</p>
                 <h1 className="max-w-3xl text-3xl font-black tracking-tight text-[var(--color-ink)] sm:text-4xl">
                   {category !== 'All' ? category : t('All Products', 'ផលិតផលទាំងអស់')}
                   {brand !== 'All' ? ` - ${brand}` : ''}
                 </h1>
-                <p className="mt-2 text-sm text-gray-500">{total.toLocaleString()} {t('products', 'ផលិតផល')}{search && ` ${t('for', 'សម្រាប់')} "${search}"`}</p>
+                <p className="mt-3 text-sm text-gray-500">{total.toLocaleString()} {t('products', 'ផលិតផល')}{search && ` ${t('for', 'សម្រាប់')} "${search}"`}</p>
               </div>
-              <div className="flex gap-2 sm:hidden">
+              <div className="flex gap-3 sm:hidden">
                 <button ref={filterButtonRef} onClick={() => setMobileFilters(true)} className="btn-secondary h-11 flex-1 px-3 text-xs" aria-haspopup="dialog">
                   <Filter className="size-4" aria-hidden="true" />
                   {t('Filters', 'តម្រង')}
@@ -166,20 +166,20 @@ export function ProductsClient({
             </div>
           </div>
 
-          <div className="hidden rounded-[1.5rem] border border-black/[0.06] bg-stone-50/80 p-3 shadow-sm sm:block sm:mb-6">
-            <div className="flex flex-wrap gap-2">
+          <div className="hidden rounded-[1.5rem] border border-black/[0.05] bg-stone-50/60 p-3 sm:mb-7 sm:block">
+            <div className="flex flex-wrap gap-3">
               <form onSubmit={handleSearchSubmit} className="relative min-w-[260px] flex-1">
                 <label className="sr-only" htmlFor="product-search">{t('Search products', 'ស្វែងរកផលិតផល')}</label>
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-gray-400" aria-hidden="true" />
-                <input id="product-search" type="search" value={search} onChange={event => setSearch(event.target.value)} placeholder={t('Search by product, brand, or SKU...', 'ស្វែងរកតាមផលិតផល ម៉ាក ឬ SKU...')} className="input-field h-12 rounded-2xl pl-10 text-sm" />
+                <input id="product-search" type="search" value={search} onChange={event => setSearch(event.target.value)} placeholder={t('Search by product, brand, or SKU...', 'ស្វែងរកតាមផលិតផល ម៉ាក ឬ SKU...')} className="input-field h-12 rounded-2xl pl-10 text-sm focus:shadow-[0_0_0_4px_rgba(14,116,144,0.08)]" />
               </form>
-              <select value={category} onChange={event => { setCategory(event.target.value); applyFilters({ category: event.target.value, page: 1 }) }} className="input-field h-12 w-auto min-w-[160px] rounded-2xl text-sm" aria-label={t('Category filter', 'តម្រងប្រភេទ')}>
+              <select value={category} onChange={event => { setCategory(event.target.value); applyFilters({ category: event.target.value, page: 1 }) }} className="input-field h-12 w-auto min-w-[160px] rounded-2xl text-sm focus:shadow-[0_0_0_4px_rgba(14,116,144,0.08)]" aria-label={t('Category filter', 'តម្រងប្រភេទ')}>
                 {categories.map(c => <option key={c} value={c}>{c === 'All' ? t('All Categories', 'គ្រប់ប្រភេទ') : c}</option>)}
               </select>
-              <select value={brand} onChange={event => { setBrand(event.target.value); applyFilters({ brand: event.target.value, page: 1 }) }} className="input-field h-12 w-auto min-w-[140px] rounded-2xl text-sm" aria-label={t('Brand filter', 'តម្រងម៉ាក')}>
+              <select value={brand} onChange={event => { setBrand(event.target.value); applyFilters({ brand: event.target.value, page: 1 }) }} className="input-field h-12 w-auto min-w-[140px] rounded-2xl text-sm focus:shadow-[0_0_0_4px_rgba(14,116,144,0.08)]" aria-label={t('Brand filter', 'តម្រងម៉ាក')}>
                 {brands.map(b => <option key={b} value={b}>{b === 'All' ? t('All Brands', 'គ្រប់ម៉ាក') : b}</option>)}
               </select>
-              <select value={sortBy} onChange={event => { setSortBy(event.target.value); applyFilters({ sort: event.target.value, page: 1 }) }} className="input-field h-12 w-auto min-w-[170px] rounded-2xl text-sm" aria-label={t('Sort products', 'តម្រៀបផលិតផល')}>
+              <select value={sortBy} onChange={event => { setSortBy(event.target.value); applyFilters({ sort: event.target.value, page: 1 }) }} className="input-field h-12 w-auto min-w-[170px] rounded-2xl text-sm focus:shadow-[0_0_0_4px_rgba(14,116,144,0.08)]" aria-label={t('Sort products', 'តម្រៀបផលិតផល')}>
                 <option value="name">{t('Name A-Z', 'ឈ្មោះ A-Z')}</option>
                 <option value="price-asc">{t('Price: Low to High', 'តម្លៃ: ទាបទៅខ្ពស់')}</option>
                 <option value="price-desc">{t('Price: High to Low', 'តម្លៃ: ខ្ពស់ទៅទាប')}</option>
@@ -189,10 +189,10 @@ export function ProductsClient({
           </div>
 
           {chips.length > 0 && (
-            <div className="mb-5 flex flex-wrap gap-2" aria-label={t('Active filters', 'តម្រងកំពុងប្រើ')}>
+            <div className="mb-6 flex flex-wrap gap-2.5" aria-label={t('Active filters', 'តម្រងកំពុងប្រើ')}>
               {chips.map(chip => (
-                <button key={chip.label} onClick={chip.clear} className="badge badge-info min-h-8 gap-1.5 animate-scale-in focus-ring">
-                  <span>{chip.label}</span>
+                <button key={chip.label} onClick={chip.clear} className="badge badge-info min-h-9 max-w-full gap-1.5 animate-scale-in rounded-full px-3 focus-ring">
+                  <span className="truncate">{chip.label}</span>
                   <X className="size-3" aria-hidden="true" />
                 </button>
               ))}
@@ -201,7 +201,7 @@ export function ProductsClient({
           )}
 
           {initialProducts.length > 0 ? (
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-5 lg:grid-cols-4">
+            <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 sm:gap-5 lg:grid-cols-4">
               {initialProducts.map(product => <ProductCard key={product.id} product={product} />)}
             </div>
           ) : (
@@ -247,15 +247,15 @@ export function ProductsClient({
               </div>
               <button onClick={() => setMobileFilters(false)} className="tap-target inline-flex items-center justify-center rounded-xl text-gray-500 hover:bg-gray-50 focus-ring" aria-label={t('Close', 'បិទ')}><X className="size-5" /></button>
             </div>
-            <div className="space-y-3">
+            <div className="space-y-4">
               <label className="block text-xs font-bold uppercase tracking-wider text-gray-500" htmlFor="mobile-product-search">{t('Search', 'ស្វែងរក')}</label>
-              <input id="mobile-product-search" type="search" value={search} onChange={event => setSearch(event.target.value)} placeholder={t('Search...', 'ស្វែងរក...')} className="input-field" />
+              <input id="mobile-product-search" type="search" value={search} onChange={event => setSearch(event.target.value)} placeholder={t('Search...', 'ស្វែងរក...')} className="input-field min-h-12" />
               <label className="block text-xs font-bold uppercase tracking-wider text-gray-500" htmlFor="mobile-category">{t('Category', 'ប្រភេទ')}</label>
-              <select id="mobile-category" value={category} onChange={event => setCategory(event.target.value)} className="input-field">{categories.map(c => <option key={c} value={c}>{c === 'All' ? t('All Categories', 'គ្រប់ប្រភេទ') : c}</option>)}</select>
+              <select id="mobile-category" value={category} onChange={event => setCategory(event.target.value)} className="input-field min-h-12 truncate">{categories.map(c => <option key={c} value={c}>{c === 'All' ? t('All Categories', 'គ្រប់ប្រភេទ') : c}</option>)}</select>
               <label className="block text-xs font-bold uppercase tracking-wider text-gray-500" htmlFor="mobile-brand">{t('Brand', 'ម៉ាក')}</label>
-              <select id="mobile-brand" value={brand} onChange={event => setBrand(event.target.value)} className="input-field">{brands.map(b => <option key={b} value={b}>{b === 'All' ? t('All Brands', 'គ្រប់ម៉ាក') : b}</option>)}</select>
+              <select id="mobile-brand" value={brand} onChange={event => setBrand(event.target.value)} className="input-field min-h-12 truncate">{brands.map(b => <option key={b} value={b}>{b === 'All' ? t('All Brands', 'គ្រប់ម៉ាក') : b}</option>)}</select>
               <label className="block text-xs font-bold uppercase tracking-wider text-gray-500" htmlFor="mobile-sort">{t('Sort', 'តម្រៀប')}</label>
-              <select id="mobile-sort" value={sortBy} onChange={event => setSortBy(event.target.value)} className="input-field">
+              <select id="mobile-sort" value={sortBy} onChange={event => setSortBy(event.target.value)} className="input-field min-h-12 truncate">
                 <option value="name">{t('Name A-Z', 'ឈ្មោះ A-Z')}</option>
                 <option value="price-asc">{t('Price: Low to High', 'តម្លៃ: ទាបទៅខ្ពស់')}</option>
                 <option value="price-desc">{t('Price: High to Low', 'តម្លៃ: ខ្ពស់ទៅទាប')}</option>

@@ -54,37 +54,37 @@ export function HomeClient({ categories, featured, catCounts, totalProducts }: P
       <Header />
 
       <section className="premium-gradient relative overflow-hidden border-b border-black/[0.06]">
-        <div className="hero-glow left-[8%] top-24 size-36 bg-cyan-300/45" aria-hidden="true" />
-        <div className="hero-glow right-[10%] top-32 size-44 bg-amber-200/35 [animation-delay:900ms]" aria-hidden="true" />
-        <div className="container-page grid grid-cols-1 items-center gap-10 py-14 sm:py-18 lg:grid-cols-12 lg:py-24">
+        <div className="hero-glow left-[8%] top-20 size-28 bg-cyan-300/30 sm:size-36" aria-hidden="true" />
+        <div className="hero-glow right-[10%] top-28 size-32 bg-amber-200/25 [animation-delay:900ms] sm:size-40" aria-hidden="true" />
+        <div className="container-page grid grid-cols-1 items-center gap-8 py-10 sm:py-14 lg:grid-cols-12 lg:gap-12 lg:py-20">
           <div className="lg:col-span-6">
             <div className="inline-flex items-center gap-2 rounded-full border border-cyan-100 bg-white/90 px-3.5 py-1.5 text-xs font-black text-[var(--color-primary)] shadow-sm animate-fade-up">
               <CheckCircle2 className="size-4" aria-hidden="true" />
               {t(`${totalProducts.toLocaleString()} security and network products`, `${totalProducts.toLocaleString()} ផលិតផលសុវត្ថិភាព និងបណ្ដាញ`)}
             </div>
-            <h1 className="mt-6 max-w-3xl text-4xl font-black leading-[1.02] tracking-tight text-[var(--color-ink)] sm:text-6xl lg:text-7xl animate-fade-up delay-1 [overflow-wrap:anywhere]">
+            <h1 className="mt-6 max-w-3xl text-[2.45rem] font-black leading-[1.08] tracking-tight text-[var(--color-ink)] sm:text-5xl lg:text-6xl animate-fade-up delay-1 [overflow-wrap:anywhere]">
               {t('Security, network, and smart access products for real projects.', 'ផលិតផលសុវត្ថិភាព បណ្ដាញ និងគ្រប់គ្រងការចូល សម្រាប់គម្រោងពិតប្រាកដ។')}
             </h1>
-            <p className="mt-6 max-w-2xl text-base leading-8 text-[var(--color-ink-soft)] sm:text-lg animate-fade-up delay-2">
+            <p className="mt-7 max-w-2xl text-base leading-8 text-[var(--color-ink-soft)] sm:text-lg animate-fade-up delay-2">
               {t('Browse CCTV, network equipment, access control, alarm systems, cabinets, smart locks, and accessories from Vlaser Solution Cambodia.', 'ស្វែងរក CCTV ឧបករណ៍បណ្ដាញ ប្រព័ន្ធគ្រប់គ្រងការចូល ប្រព័ន្ធរោទិ៍ ទូ Cabinet សោឆ្លាត និងគ្រឿងបន្លាស់ពី Vlaser Solution Cambodia។')}
             </p>
-            <div className="mt-8 flex flex-col gap-3 sm:flex-row animate-fade-up delay-3">
-              <Link href="/products" className="btn-primary h-12 px-7">
+            <div className="mt-9 flex flex-col gap-3 sm:flex-row animate-fade-up delay-3">
+              <Link href="/products" className="btn-primary h-12 w-full px-7 sm:w-auto">
                 <ShoppingBag className="size-4" aria-hidden="true" />
                 {t('Shop Products', 'ទិញផលិតផល')}
               </Link>
-              <a href="https://t.me/SANGHAMEUK" target="_blank" rel="noopener noreferrer" className="btn-secondary h-12 px-7">
+              <a href="https://t.me/SANGHAMEUK" target="_blank" rel="noopener noreferrer" className="btn-secondary h-12 w-full px-7 sm:w-auto">
                 <MessageCircle className="size-4" aria-hidden="true" />
                 {t('Contact Sales', 'ទាក់ទងផ្នែកលក់')}
               </a>
             </div>
-            <div className="mt-8 grid grid-cols-1 gap-3 sm:grid-cols-3 animate-fade-up delay-4">
+            <div className="mt-7 grid grid-cols-1 gap-3 sm:grid-cols-3 animate-fade-up delay-4">
               {[
                 { icon: PackageSearch, label: t('Broad product selection', 'ជម្រើសផលិតផលច្រើន') },
                 { icon: Wrench, label: t('Installation support', 'ជំនួយការដំឡើង') },
                 { icon: MessageCircle, label: t('Sales assistance by Telegram', 'ជំនួយលក់តាម Telegram') },
               ].map(item => (
-                <div key={item.label} className="flex items-center gap-3 rounded-2xl border border-black/[0.06] bg-white/80 p-3 text-sm font-bold text-gray-800 shadow-sm backdrop-blur">
+              <div key={item.label} className="flex items-center gap-3 rounded-2xl border border-black/[0.06] bg-white/80 p-3 text-sm font-bold text-gray-800 shadow-sm backdrop-blur">
                   <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-cyan-50 text-[var(--color-primary)]">
                     <item.icon className="size-4" aria-hidden="true" />
                   </span>
@@ -95,8 +95,8 @@ export function HomeClient({ categories, featured, catCounts, totalProducts }: P
           </div>
 
           <div className="lg:col-span-6">
-            <div className="relative mx-auto max-w-xl animate-fade-in delay-2">
-              <div className="premium-panel rounded-[1.75rem] p-4 sm:p-5">
+            <div className="relative mx-auto max-w-lg animate-fade-in delay-2">
+              <div className="premium-panel rounded-[1.75rem] p-4 shadow-md sm:p-5">
                 <div className="flex items-center justify-between border-b border-gray-100 pb-4">
                   <div>
                     <p className="text-xs font-bold uppercase tracking-wider text-[var(--color-primary)]">Vlaser Store</p>
@@ -106,9 +106,9 @@ export function HomeClient({ categories, featured, catCounts, totalProducts }: P
                 </div>
                 <div className="mt-4 grid gap-3">
                   {heroProducts.map(product => (
-                    <Link key={product.id} href={`/products/${product.id}`} className="group grid grid-cols-[84px_1fr_auto] items-center gap-3 rounded-2xl border border-black/[0.06] bg-stone-50/70 p-3 transition-all duration-300 hover:-translate-y-0.5 hover:border-cyan-100 hover:bg-white hover:shadow-md focus-ring">
+                    <Link key={product.id} href={`/products/${product.id}`} className="group grid grid-cols-[76px_1fr_auto] items-center gap-3 rounded-2xl border border-black/[0.06] bg-stone-50/70 p-3 transition-all duration-200 hover:border-cyan-200 hover:bg-white hover:shadow-sm focus-ring">
                       <div className="flex aspect-square items-center justify-center overflow-hidden rounded-xl bg-white p-2">
-                        <img src={product.image} alt={product.name} className="max-h-full max-w-full object-contain transition-transform duration-300 group-hover:scale-[1.03]" onError={event => { (event.currentTarget as HTMLImageElement).src = '/placeholder.svg' }} />
+                        <img src={product.image} alt={product.name} className="max-h-[92%] max-w-[92%] object-contain transition-transform duration-200 group-hover:scale-[1.015]" onError={event => { (event.currentTarget as HTMLImageElement).src = '/placeholder.svg' }} />
                       </div>
                       <div className="min-w-0">
                         <p className="text-[10px] font-bold uppercase tracking-wider text-[var(--color-primary)]">{product.brand}</p>
@@ -141,15 +141,15 @@ export function HomeClient({ categories, featured, catCounts, totalProducts }: P
             {cats.map(c => {
               const Icon = categoryIcons[c.name] || Layers
               return (
-                <Link key={c.name} href={`/products?category=${encodeURIComponent(c.name)}`} className="group surface-panel relative flex min-h-[148px] flex-col justify-between p-5 transition-all duration-300 hover:-translate-y-1 hover:border-cyan-100 hover:shadow-lg focus-ring">
-                  <span className="flex size-11 items-center justify-center rounded-xl bg-cyan-50 text-[var(--color-primary)] transition-colors duration-300 group-hover:bg-[var(--color-primary)] group-hover:text-white">
+                <Link key={c.name} href={`/products?category=${encodeURIComponent(c.name)}`} className="group surface-panel relative flex min-h-[150px] flex-col justify-between p-5 transition-all duration-200 hover:border-cyan-300 hover:shadow-md focus-ring">
+                  <span className="flex size-11 items-center justify-center rounded-xl bg-cyan-50 text-[var(--color-primary)] transition-colors duration-200 group-hover:bg-[var(--color-primary)] group-hover:text-white">
                     <Icon className="size-5" aria-hidden="true" />
                   </span>
                   <span>
-                    <span className="block line-clamp-1 text-sm font-bold text-gray-950">{c.name}</span>
+                    <span className="block line-clamp-1 text-[15px] font-black text-gray-950">{c.name}</span>
                     <span className="mt-1 block text-xs text-gray-500">{c.count} {t('products', 'ផលិតផល')}</span>
                   </span>
-                  <span className="absolute bottom-4 right-4 flex size-8 items-center justify-center rounded-full bg-white text-gray-400 shadow-sm transition-all duration-200 group-hover:translate-x-0.5 group-hover:text-[var(--color-primary)]">
+                  <span className="absolute bottom-4 right-4 flex size-8 items-center justify-center rounded-full border border-black/[0.06] bg-white text-gray-500 shadow-sm transition-all duration-200 group-hover:border-cyan-200 group-hover:text-[var(--color-primary)]">
                     <ArrowRight className="size-4" aria-hidden="true" />
                   </span>
                 </Link>

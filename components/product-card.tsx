@@ -26,12 +26,12 @@ export function ProductCard({ product }: { product: StorefrontProduct }) {
     <article className="group h-full min-w-0 animate-fade-up">
       <Link href={`/products/${product.id}`} className="card flex h-full min-w-0 flex-col focus-ring bg-white" aria-label={`${t('View details for', 'មើលព័ត៌មាន')} ${product.name}`}>
         <div className="relative flex aspect-square items-center justify-center overflow-hidden bg-[linear-gradient(180deg,#fafafa_0%,#f2f2f1_100%)] p-3 sm:p-4">
-          <div className="absolute inset-0 skeleton opacity-0 transition-opacity duration-200 group-hover:opacity-20" aria-hidden="true" />
-          <div className="absolute inset-x-6 bottom-3 h-10 rounded-full bg-black/10 blur-2xl opacity-0 transition-opacity duration-300 group-hover:opacity-100" aria-hidden="true" />
+          <div className="absolute inset-0 skeleton opacity-0 transition-opacity duration-200 group-hover:opacity-15" aria-hidden="true" />
+          <div className="absolute inset-x-8 bottom-3 h-9 rounded-full bg-black/10 blur-2xl opacity-0 transition-opacity duration-200 group-hover:opacity-70" aria-hidden="true" />
           <img
             src={imageSrc}
             alt={product.name}
-            className="relative max-h-[94%] max-w-[94%] object-contain transition-transform duration-300 ease-[var(--ease-store)] group-hover:scale-[1.04]"
+            className="relative max-h-[94%] max-w-[94%] object-contain transition-transform duration-200 ease-[var(--ease-store)] group-hover:scale-[1.018]"
             loading="lazy"
             onError={() => { if (imageSrc !== '/placeholder.svg') setImageSrc('/placeholder.svg') }}
           />
@@ -44,7 +44,7 @@ export function ProductCard({ product }: { product: StorefrontProduct }) {
             <span className="shrink-0 rounded-full bg-stone-100 px-2 py-1 text-[10px] font-mono text-gray-500">{product.sku.slice(0, 12)}</span>
           </div>
 
-          <h3 className="mt-2 min-h-[4.15rem] text-sm font-black leading-snug text-[var(--color-ink)] line-clamp-3 transition-colors duration-200 group-hover:text-[var(--color-primary)] [overflow-wrap:anywhere]">
+          <h3 className="mt-2 min-h-[3.25rem] text-sm font-black leading-snug text-[var(--color-ink)] line-clamp-2 transition-colors duration-200 group-hover:text-[var(--color-primary)] [overflow-wrap:anywhere]">
             {product.name}
           </h3>
           <p className="mt-1 line-clamp-1 text-xs font-medium text-gray-500">{product.category}</p>
@@ -57,7 +57,7 @@ export function ProductCard({ product }: { product: StorefrontProduct }) {
             <div className="mt-3">
               <span className="inline-flex min-h-10 w-full min-w-0 items-center justify-center gap-1.5 rounded-xl bg-[var(--color-ink)] px-2 text-center text-xs font-bold text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.16)] transition-all duration-200 group-hover:bg-[var(--color-primary-dark)] group-hover:shadow-md sm:px-3">
                 {t('View Details', 'មើលលម្អិត')}
-                <ArrowRight className="size-3.5 transition-transform duration-200 group-hover:translate-x-0.5" aria-hidden="true" />
+                <ArrowRight className="size-3.5 transition-transform duration-200 group-hover:translate-x-px" aria-hidden="true" />
               </span>
             </div>
           </div>
