@@ -435,22 +435,6 @@ export function ProductDetailClient({ product, related }: Props) {
               <button type="button" onClick={() => setShowConfirm(false)} className="tap-target inline-flex items-center justify-center rounded-xl text-gray-500 hover:bg-gray-50 focus-ring" aria-label={t('Cancel', 'បោះបង់')}><X className="size-5" /></button>
             </div>
 
-            <div className="flex gap-3 rounded-2xl bg-gray-50 p-3">
-              <img src={product.image} alt="" className="size-16 shrink-0 rounded-xl border border-gray-100 bg-white object-contain p-1.5" onError={event => { (event.currentTarget as HTMLImageElement).src = '/placeholder.svg' }} />
-              <div className="min-w-0">
-                <p className="text-xs font-black uppercase tracking-wider text-[var(--color-primary)]">{product.brand}</p>
-                <p className="mt-1 line-clamp-2 text-sm font-bold leading-5 text-gray-950">{cleanText(product.name)}</p>
-                <p className="mt-1 text-xs font-mono text-gray-500">SKU: {product.sku}</p>
-              </div>
-            </div>
-
-            <dl className="mt-4 divide-y divide-gray-100 rounded-2xl border border-gray-100">
-              <div className="flex items-center justify-between gap-4 px-4 py-3 text-sm"><dt className="text-gray-500">{t('Quantity', 'ចំនួន')}</dt><dd className="font-bold text-gray-950">{qty}</dd></div>
-              <div className="flex items-center justify-between gap-4 px-4 py-3 text-sm"><dt className="text-gray-500">{t('Unit price', 'តម្លៃក្នុងមួយឯកតា')}</dt><dd className="font-bold text-gray-950">{unitDisplay}</dd></div>
-              <div className="flex items-center justify-between gap-4 px-4 py-3 text-sm"><dt className="text-gray-500">{t('Total', 'សរុប')}</dt><dd className="text-lg font-black text-gray-950">{totalDisplay}</dd></div>
-              <div className="flex items-center justify-between gap-4 px-4 py-3 text-sm"><dt className="text-gray-500">{t('Currency', 'រូបិយប័ណ្ណ')}</dt><dd className="font-bold text-gray-950">{currency}</dd></div>
-            </dl>
-
             <div className="mt-4 grid grid-cols-2 gap-2 rounded-2xl bg-gray-50 p-1.5">
               <button
                 type="button"
@@ -473,7 +457,36 @@ export function ProductDetailClient({ product, related }: Props) {
               </button>
             </div>
 
+            {paymentMethod === 'telegram' && (
+              <>
+                <div className="mt-4 flex gap-3 rounded-2xl bg-gray-50 p-3">
+                  <img src={product.image} alt="" className="size-16 shrink-0 rounded-xl border border-gray-100 bg-white object-contain p-1.5" onError={event => { (event.currentTarget as HTMLImageElement).src = '/placeholder.svg' }} />
+                  <div className="min-w-0">
+                    <p className="text-xs font-black uppercase tracking-wider text-[var(--color-primary)]">{product.brand}</p>
+                    <p className="mt-1 line-clamp-2 text-sm font-bold leading-5 text-gray-950">{cleanText(product.name)}</p>
+                    <p className="mt-1 text-xs font-mono text-gray-500">SKU: {product.sku}</p>
+                  </div>
+                </div>
+
+                <dl className="mt-4 divide-y divide-gray-100 rounded-2xl border border-gray-100">
+                  <div className="flex items-center justify-between gap-4 px-4 py-3 text-sm"><dt className="text-gray-500">{t('Quantity', 'ចំនួន')}</dt><dd className="font-bold text-gray-950">{qty}</dd></div>
+                  <div className="flex items-center justify-between gap-4 px-4 py-3 text-sm"><dt className="text-gray-500">{t('Unit price', 'តម្លៃក្នុងមួយឯកតា')}</dt><dd className="font-bold text-gray-950">{unitDisplay}</dd></div>
+                  <div className="flex items-center justify-between gap-4 px-4 py-3 text-sm"><dt className="text-gray-500">{t('Total', 'សរុប')}</dt><dd className="text-lg font-black text-gray-950">{totalDisplay}</dd></div>
+                  <div className="flex items-center justify-between gap-4 px-4 py-3 text-sm"><dt className="text-gray-500">{t('Currency', 'រូបិយប័ណ្ណ')}</dt><dd className="font-bold text-gray-950">{currency}</dd></div>
+                </dl>
+              </>
+            )}
+
             {paymentMethod === 'khqr' ? (
+              khqrStatus === 'creating' ? (
+                <div className="mt-4 flex min-h-[360px] items-center justify-center rounded-[2rem] bg-white text-center shadow-sm ring-1 ring-gray-100">
+                  <div>
+                    <Loader2 className="mx-auto size-11 animate-spin text-cyan-500" aria-hidden="true" />
+                    <p className="mt-5 text-lg font-black text-gray-950">{t('Preparing KHQR', 'កំពុងរៀបចំ KHQR')}</p>
+                    <p className="mt-2 max-w-xs text-sm leading-6 text-gray-500">{t('Please wait while we create your secure payment QR.', 'សូមរង់ចាំ ខណៈយើងបង្កើត QR ទូទាត់សុវត្ថិភាពរបស់អ្នក។')}</p>
+                  </div>
+                </div>
+              ) : (
               <div className="mt-4 overflow-hidden rounded-[2rem] border border-gray-100 bg-white shadow-sm">
                 <div className="bg-[linear-gradient(135deg,#e61937_0%,#c8102e_50%,#7f1d1d_100%)] px-5 py-4 text-white">
                   <div className="flex items-center justify-between gap-3">
@@ -502,12 +515,10 @@ export function ProductDetailClient({ product, related }: Props) {
                     khqrStatus === 'setup_required' || khqrStatus === 'error' || khqrStatus === 'expired' ? 'bg-amber-50 text-amber-700' :
                     'bg-cyan-50 text-cyan-700'
                   }`}>
-                    {khqrStatus === 'creating' && <Loader2 className="size-3 animate-spin" aria-hidden="true" />}
                     {khqrStatus === 'paid' && <CheckCircle2 className="size-3" aria-hidden="true" />}
                     {(khqrStatus === 'setup_required' || khqrStatus === 'error' || khqrStatus === 'expired') && <AlertCircle className="size-3" aria-hidden="true" />}
                     {khqrStatus === 'paid' ? t('Paid', 'បានទូទាត់') :
                       khqrStatus === 'scanned' ? t('Scanned', 'បានស្កេន') :
-                      khqrStatus === 'creating' ? t('Preparing', 'កំពុងរៀបចំ') :
                       khqrStatus === 'setup_required' ? t('Setup required', 'ត្រូវការកំណត់') :
                       khqrStatus === 'expired' ? t('Expired', 'ផុតកំណត់') :
                       khqrStatus === 'error' ? t('Try again', 'ព្យាយាមម្តងទៀត') :
@@ -515,7 +526,34 @@ export function ProductDetailClient({ product, related }: Props) {
                   </span>
                 </div>
 
-                {khqrPayment && (khqrStatus === 'qr' || khqrStatus === 'scanned' || khqrStatus === 'paid') ? (
+                {khqrPayment && khqrStatus === 'scanned' ? (
+                  <div className="flex min-h-[360px] items-center justify-center text-center">
+                    <div>
+                      <div className="mx-auto flex size-36 items-center justify-center rounded-[2rem] bg-cyan-50">
+                        <div className="relative">
+                          <QrCode className="size-16 text-gray-400" aria-hidden="true" />
+                          <CheckCircle2 className="absolute -right-2 -top-2 size-7 rounded-full bg-white text-emerald-500" aria-hidden="true" />
+                        </div>
+                      </div>
+                      <h3 className="mt-8 text-2xl font-black text-gray-950">{t('QR code is scanned', 'បានស្កេន QR រួច')}</h3>
+                      <p className="mx-auto mt-4 max-w-sm text-base leading-7 text-gray-600">{t('Please follow the instruction in your banking app to finish payment.', 'សូមធ្វើតាមការណែនាំក្នុងកម្មវិធីធនាគាររបស់អ្នក ដើម្បីបញ្ចប់ការទូទាត់។')}</p>
+                      <div className="mx-auto mt-7 flex max-w-[292px] items-center justify-center gap-2 rounded-2xl bg-cyan-50 px-4 py-3 text-sm font-bold text-cyan-800">
+                        <Loader2 className="size-4 animate-spin" aria-hidden="true" />
+                        {t('Checking payment...', 'កំពុងពិនិត្យការទូទាត់...')}
+                      </div>
+                    </div>
+                  </div>
+                ) : khqrPayment && khqrStatus === 'paid' ? (
+                  <div className="flex min-h-[360px] items-center justify-center text-center">
+                    <div>
+                      <div className="mx-auto flex size-36 items-center justify-center rounded-[2rem] bg-emerald-50">
+                        <CheckCircle2 className="size-20 text-emerald-500" aria-hidden="true" />
+                      </div>
+                      <h3 className="mt-8 text-2xl font-black text-gray-950">{t('Payment completed', 'បានទូទាត់')}</h3>
+                      <p className="mx-auto mt-4 max-w-sm text-base leading-7 text-gray-600">{t('Payment received. Our sales team will confirm your order.', 'បានទទួលការទូទាត់។ ក្រុមលក់នឹងបញ្ជាក់ការបញ្ជាទិញរបស់អ្នក។')}</p>
+                    </div>
+                  </div>
+                ) : khqrPayment && khqrStatus === 'qr' ? (
                   <div className="mt-4 text-center">
                     <div className="mx-auto flex max-w-[292px] items-center justify-center rounded-[1.75rem] border border-gray-100 bg-white p-3 shadow-[0_18px_50px_rgba(15,23,42,0.10)]">
                       <img src={khqrPayment.qrImage} alt={t('Bakong KHQR payment code', 'កូដទូទាត់ Bakong KHQR')} className="h-auto w-full rounded-2xl" />
@@ -531,11 +569,7 @@ export function ProductDetailClient({ product, related }: Props) {
                       </div>
                     </div>
                     <p className="mt-2 text-xs leading-5 text-gray-500">
-                      {khqrStatus === 'paid'
-                        ? t('Payment received. Our sales team will confirm your order.', 'បានទទួលការទូទាត់។ ក្រុមលក់នឹងបញ្ជាក់ការបញ្ជាទិញរបស់អ្នក។')
-                        : khqrStatus === 'scanned'
-                          ? t('Scanned. Please complete payment in your banking app.', 'បានស្កេន។ សូមបញ្ចប់ការទូទាត់ក្នុងកម្មវិធីធនាគាររបស់អ្នក។')
-                        : khqrPayment.syncAvailable
+                      {khqrPayment.syncAvailable
                           ? t('Scan with Bakong or any KHQR app, then tap I have scanned.', 'ស្កេនជាមួយ Bakong ឬកម្មវិធី KHQR រួចចុច បានស្កេនរួច។')
                           : t('KHQR is ready, but automatic payment sync needs setup.', 'KHQR រួចរាល់ ប៉ុន្តែការធ្វើសមកាលកម្មការទូទាត់ស្វ័យប្រវត្តិត្រូវការកំណត់។')}
                     </p>
@@ -545,21 +579,13 @@ export function ProductDetailClient({ product, related }: Props) {
                         {t('I have scanned', 'បានស្កេនរួច')}
                       </button>
                     )}
-                    {khqrStatus === 'scanned' && (
-                      <div className="mx-auto mt-4 flex max-w-[292px] items-center justify-center gap-2 rounded-2xl bg-cyan-50 px-4 py-3 text-sm font-bold text-cyan-800">
-                        <Loader2 className="size-4 animate-spin" aria-hidden="true" />
-                        {t('Checking payment...', 'កំពុងពិនិត្យការទូទាត់...')}
-                      </div>
-                    )}
                   </div>
                 ) : (
                   <div className="mt-4 flex min-h-40 items-center justify-center rounded-3xl bg-gray-50 p-5 text-center">
                     <div>
-                      {khqrStatus === 'creating' ? <Loader2 className="mx-auto size-8 animate-spin text-[var(--color-primary)]" aria-hidden="true" /> : <AlertCircle className="mx-auto size-8 text-amber-600" aria-hidden="true" />}
+                      <AlertCircle className="mx-auto size-8 text-amber-600" aria-hidden="true" />
                       <p className="mt-3 text-sm font-bold text-gray-950">
-                        {khqrStatus === 'creating'
-                          ? t('Preparing KHQR...', 'កំពុងរៀបចំ KHQR...')
-                          : khqrMessage || t('KHQR payment could not start. Please try again.', 'មិនអាចចាប់ផ្តើមការទូទាត់ KHQR បានទេ។ សូមព្យាយាមម្តងទៀត។')}
+                        {khqrMessage || t('KHQR payment could not start. Please try again.', 'មិនអាចចាប់ផ្តើមការទូទាត់ KHQR បានទេ។ សូមព្យាយាមម្តងទៀត។')}
                       </p>
                     </div>
                   </div>
@@ -573,6 +599,7 @@ export function ProductDetailClient({ product, related }: Props) {
                 )}
                 </div>
               </div>
+              )
             ) : (
               <>
                 <p className="mt-4 text-sm leading-6 text-gray-500">{t('Checkout continues in Telegram. You can review and send the prepared message there.', 'ការបញ្ជាទិញនឹងបន្តនៅក្នុង Telegram។ អ្នកអាចពិនិត្យ និងផ្ញើសារដែលបានរៀបចំនៅទីនោះ។')}</p>
