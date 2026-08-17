@@ -47,8 +47,11 @@ export async function checkBakongPayment(md5: string): Promise<ProviderResult> {
   const token = process.env.BAKONG_API_TOKEN
   if (!token) return { status: 'setup_required' }
 
-  const bearerResult = await checkWithAuthorization(md5, `Bearer ${token}`)
-  if (bearerResult.providerStatus !== 401 && bearerResult.providerStatus !== 403) return bearerResult
+  const rawResult = await checkWithAuthorization(md5, token)
+  if (rawResult.status === 'paid') return rawResult
 
-  return checkWithAuthorization(md5, token)
+  const bearerResult = await checkWithAuthorization(md5, `Bearer ${token}`)
+  if (bearerResult.status === 'paid') return bearerResult
+  if (rawResult.providerStatus !== 401 && rawResult.providerStatus !== 403) return rawResult
+  return bearerResult
 }

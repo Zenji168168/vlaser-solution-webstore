@@ -50,6 +50,15 @@ test('Bakong API token is server-only and not embedded in product checkout clien
   assert.doesNotMatch(statusHelper, /eyJhbGciOi/)
 })
 
+test('Bakong status checks both supported authorization formats', () => {
+  const statusHelper = readFileSync('lib/bakong/status.ts', 'utf8')
+
+  assert.match(statusHelper, /checkWithAuthorization\(md5, token\)/)
+  assert.match(statusHelper, /checkWithAuthorization\(md5, `Bearer \$\{token\}`\)/)
+  assert.match(statusHelper, /rawResult\.status === 'paid'/)
+  assert.match(statusHelper, /bearerResult\.status === 'paid'/)
+})
+
 test('Bakong checkout does not show scanned without a real provider signal', () => {
   const clientSource = readFileSync('app/products/[id]/product-detail-client.tsx', 'utf8')
 
