@@ -116,6 +116,39 @@ export const auditLog = pgTable('audit_log', {
   createdAt: timestamp('created_at').defaultNow(),
 })
 
+// === CHECKOUT ORDERS ===
+export const checkoutOrders = pgTable('checkout_orders', {
+  id: serial('id').primaryKey(),
+  orderNumber: varchar('order_number', { length: 80 }).notNull(),
+  productId: integer('product_id').references(() => products.id),
+  productPublicId: varchar('product_public_id', { length: 20 }).notNull(),
+  productSku: varchar('product_sku', { length: 100 }).notNull(),
+  productName: text('product_name').notNull(),
+  customerName: varchar('customer_name', { length: 160 }).notNull(),
+  customerPhone: varchar('customer_phone', { length: 40 }).notNull(),
+  phoneHasTelegram: boolean('phone_has_telegram').notNull().default(false),
+  quantity: integer('quantity').notNull().default(1),
+  unitPrice: numeric('unit_price', { precision: 10, scale: 2 }).notNull(),
+  totalAmount: numeric('total_amount', { precision: 12, scale: 2 }).notNull(),
+  currency: varchar('currency', { length: 3 }).notNull(),
+  paymentMethod: varchar('payment_method', { length: 40 }).notNull().default('khqr'),
+  paymentProvider: varchar('payment_provider', { length: 40 }).notNull().default('bakong'),
+  paymentMd5: varchar('payment_md5', { length: 32 }).notNull(),
+  paymentStatus: varchar('payment_status', { length: 30 }).notNull().default('pending'),
+  providerStatus: integer('provider_status'),
+  paidAt: timestamp('paid_at'),
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow(),
+}, (table) => [
+  uniqueIndex('idx_checkout_orders_order_number').on(table.orderNumber),
+  uniqueIndex('idx_checkout_orders_payment_md5').on(table.paymentMd5),
+  index('idx_checkout_orders_status_created').on(table.paymentStatus, table.createdAt),
+  index('idx_checkout_orders_product_public_id').on(table.productPublicId),
+  check('chk_checkout_orders_currency', sql`${table.currency} in ('USD', 'KHR')`),
+  check('chk_checkout_orders_payment_status', sql`${table.paymentStatus} in ('pending', 'paid', 'expired', 'unavailable')`),
+  check('chk_checkout_orders_quantity', sql`${table.quantity} > 0`),
+])
+
 // === ADMIN USERS ===
 export const adminUsers = pgTable('admin_users', {
   id: serial('id').primaryKey(),

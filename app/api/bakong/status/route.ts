@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { checkBakongPayment } from '@/lib/bakong/status'
+import { markCheckoutOrderPaid } from '@/lib/checkout-orders'
 
 const VALID_MD5 = /^[a-f0-9]{32}$/i
 
@@ -20,11 +21,13 @@ export async function POST(request: Request) {
 
   try {
     const result = await checkBakongPayment(md5)
+    const order = result.status === 'paid' ? await markCheckoutOrderPaid(md5, result.providerStatus) : null
     const httpStatus = result.status === 'setup_required' ? 503 : 200
     return NextResponse.json({
       status: result.status,
       paid: result.status === 'paid',
       providerStatus: result.providerStatus,
+      orderStored: Boolean(order),
     }, { status: httpStatus })
   } catch {
     return NextResponse.json({ status: 'unavailable', paid: false }, { status: 200 })

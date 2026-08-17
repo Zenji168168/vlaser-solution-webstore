@@ -1,6 +1,7 @@
 import QRCode from 'qrcode'
 import { NextResponse } from 'next/server'
 import { buildKhqrPayment, createPaymentReference, type BakongCurrency } from '@/lib/bakong/khqr'
+import { calculateCheckoutAmount, createPendingCheckoutOrder, getCheckoutProductSnapshot, normalizeCheckoutCustomer, normalizeCheckoutQuantity } from '@/lib/checkout-orders'
 
 const VALID_PRODUCT_ID = /^p\d{4,}$/
 const VALID_CURRENCY = new Set<BakongCurrency>(['KHR', 'USD'])
@@ -15,18 +16,28 @@ export async function POST(request: Request) {
 
   const data = body && typeof body === 'object' ? body as Record<string, unknown> : {}
   const productId = typeof data.productId === 'string' ? data.productId : ''
-  const amount = typeof data.amount === 'number' ? data.amount : Number(data.amount)
   const currency = typeof data.currency === 'string' && VALID_CURRENCY.has(data.currency as BakongCurrency)
     ? data.currency as BakongCurrency
     : null
+  const quantity = normalizeCheckoutQuantity(data.quantity)
+  const customer = {
+    name: typeof data.customerName === 'string' ? data.customerName : '',
+    phone: typeof data.customerPhone === 'string' ? data.customerPhone : '',
+    phoneHasTelegram: Boolean(data.phoneHasTelegram),
+  }
 
-  if (!VALID_PRODUCT_ID.test(productId) || !currency || !Number.isFinite(amount) || amount <= 0) {
+  const customerResult = normalizeCheckoutCustomer(customer)
+  if (!VALID_PRODUCT_ID.test(productId) || !currency || !customerResult.ok) {
     return NextResponse.json({ error: 'Invalid checkout request.' }, { status: 400 })
   }
 
   const accountId = process.env.BAKONG_MERCHANT_ACCOUNT || 'thareach_meuk@bkrt'
 
   try {
+    const product = await getCheckoutProductSnapshot(productId)
+    if (!product) return NextResponse.json({ error: 'Product not found.' }, { status: 404 })
+
+    const amount = calculateCheckoutAmount(product.unitPriceUsd, quantity, currency)
     const payment = buildKhqrPayment({
       accountId,
       merchantName: process.env.BAKONG_MERCHANT_NAME || 'THAREACH MEUK',
@@ -45,6 +56,15 @@ export async function POST(request: Request) {
         dark: '#111827',
         light: '#FFFFFF',
       },
+    })
+    await createPendingCheckoutOrder({
+      productPublicId: product.publicId,
+      quantity,
+      currency,
+      customer: customerResult.customer,
+      paymentMd5: payment.md5,
+      orderNumber: payment.billNumber,
+      amount: Number(payment.amount),
     })
 
     return NextResponse.json({

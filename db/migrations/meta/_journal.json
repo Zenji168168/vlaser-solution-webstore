@@ -15,6 +15,13 @@
       "when": 1782981700000,
       "tag": "0001_admin_foundation",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1786947600000,
+      "tag": "0002_checkout_orders",
+      "breakpoints": true
     }
   ]
 }

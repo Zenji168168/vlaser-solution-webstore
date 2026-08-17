@@ -214,6 +214,10 @@ export function ProductDetailClient({ product, related }: Props) {
           productId: product.id,
           amount: khqrAmount,
           currency,
+          quantity: qty,
+          customerName: normalizedCustomerName,
+          customerPhone: normalizedCustomerPhone,
+          phoneHasTelegram: phoneHasTelegram === 'yes',
         }),
       })
       const data = await response.json().catch(() => null)

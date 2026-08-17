@@ -3,13 +3,14 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { BarChart3, Boxes, Building2, FolderTree, Home, ImageIcon, LogOut, Menu, Settings, ShieldCheck, X } from 'lucide-react'
+import { BarChart3, Boxes, Building2, FolderTree, Home, ImageIcon, LogOut, Menu, ReceiptText, Settings, ShieldCheck, X } from 'lucide-react'
 import { signOutAdmin } from '@/app/admin/actions'
 import { cn } from '@/lib/utils'
 
 const navItems = [
   { href: '/admin', label: 'Dashboard', icon: BarChart3 },
   { href: '/admin/products', label: 'Products', icon: Boxes },
+  { href: '/admin/orders', label: 'Orders', icon: ReceiptText },
   { href: '/admin/categories', label: 'Categories', icon: FolderTree, disabled: true },
   { href: '/admin/brands', label: 'Brands', icon: Building2, disabled: true },
   { href: '/admin/media', label: 'Media', icon: ImageIcon, disabled: true },
