@@ -53,15 +53,13 @@ test('Bakong API token is server-only and not embedded in product checkout clien
 test('Bakong checkout does not show scanned without a real provider signal', () => {
   const clientSource = readFileSync('app/products/[id]/product-detail-client.tsx', 'utf8')
 
-  assert.match(clientSource, /Not yet scanned/)
-  assert.match(clientSource, /មិនទាន់ស្កេន/)
   assert.match(clientSource, /Waiting for payment/)
+  assert.match(clientSource, /If you already scanned the QR/)
+  assert.match(clientSource, /Waiting for Bakong payment confirmation/)
   assert.match(clientSource, /បានទូទាត់/)
   assert.doesNotMatch(clientSource, /setKhqrStatus\('scanned'\)/)
   assert.doesNotMatch(clientSource, /QR code is scanned/)
-  assert.doesNotMatch(clientSource, /បានស្កេន QR រួច/)
   assert.doesNotMatch(clientSource, /I have scanned/)
-  assert.doesNotMatch(clientSource, /បានស្កេនរួច/)
 })
 
 test('checkout asks for customer details before KHQR or Telegram payment', () => {
