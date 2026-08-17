@@ -63,3 +63,15 @@ test('Bakong checkout does not show scanned without a real provider signal', () 
   assert.doesNotMatch(clientSource, /I have scanned/)
   assert.doesNotMatch(clientSource, /បានស្កេនរួច/)
 })
+
+test('checkout asks for customer details before KHQR or Telegram payment', () => {
+  const clientSource = readFileSync('app/products/[id]/product-detail-client.tsx', 'utf8')
+
+  assert.match(clientSource, /Customer details/)
+  assert.match(clientSource, /Phone number/)
+  assert.match(clientSource, /Does this phone number have Telegram/)
+  assert.match(clientSource, /canChoosePayment/)
+  assert.match(clientSource, /disabled=\{!canChoosePayment\}/)
+  assert.match(clientSource, /Customer name:/)
+  assert.match(clientSource, /Phone has Telegram:/)
+})

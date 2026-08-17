@@ -19,7 +19,7 @@ interface Props {
 const TELEGRAM_URL = 'https://t.me/SANGHAMEUK'
 const KHR_RATE = 4100
 
-type PaymentMethod = 'khqr' | 'telegram'
+type PaymentMethod = 'khqr' | 'telegram' | null
 type KhqrStatus = 'idle' | 'creating' | 'qr' | 'paid' | 'setup_required' | 'error' | 'expired'
 
 interface KhqrPayment {
@@ -50,11 +50,14 @@ export function ProductDetailClient({ product, related }: Props) {
   const [fullscreen, setFullscreen] = useState(false)
   const [activeImage, setActiveImage] = useState(product.image)
   const [recentProducts, setRecentProducts] = useState<StorefrontProduct[]>([])
-  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('khqr')
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>(null)
   const [khqrStatus, setKhqrStatus] = useState<KhqrStatus>('idle')
   const [khqrPayment, setKhqrPayment] = useState<KhqrPayment | null>(null)
   const [khqrMessage, setKhqrMessage] = useState('')
   const [khqrRemainingSeconds, setKhqrRemainingSeconds] = useState(0)
+  const [customerName, setCustomerName] = useState('')
+  const [customerPhone, setCustomerPhone] = useState('')
+  const [phoneHasTelegram, setPhoneHasTelegram] = useState<'yes' | 'no'>('yes')
   const orderButtonRef = useRef<HTMLButtonElement>(null)
   const modalRef = useRef<HTMLDivElement>(null)
 
@@ -134,7 +137,7 @@ export function ProductDetailClient({ product, related }: Props) {
 
   useEffect(() => {
     if (showConfirm) return
-    setPaymentMethod('khqr')
+    setPaymentMethod(null)
     setKhqrStatus('idle')
     setKhqrPayment(null)
     setKhqrMessage('')
@@ -148,6 +151,9 @@ export function ProductDetailClient({ product, related }: Props) {
   const unitDisplay = formatPrice(product.price)
   const productImages = Array.from(new Set([product.image].filter(Boolean)))
   const khqrAmount = currency === 'KHR' ? Math.round(product.price * qty * KHR_RATE) : Number((product.price * qty).toFixed(2))
+  const normalizedCustomerName = customerName.trim()
+  const normalizedCustomerPhone = customerPhone.trim()
+  const canChoosePayment = normalizedCustomerName.length >= 2 && /^[0-9+()\-\s]{7,20}$/.test(normalizedCustomerPhone)
   const khqrRemainingMinutes = Math.floor(khqrRemainingSeconds / 60)
   const khqrRemainingPartialSeconds = khqrRemainingSeconds % 60
   const khqrCountdown = `${khqrRemainingMinutes}:${khqrRemainingPartialSeconds.toString().padStart(2, '0')}`
@@ -168,6 +174,9 @@ export function ProductDetailClient({ product, related }: Props) {
           `ចំនួន: ${qty}`,
           `តម្លៃ: ${unitDisplay} x ${qty} = ${totalDisplay}`,
           `រូបិយប័ណ្ណបង្ហាញ: ${currency}`,
+          `ឈ្មោះអតិថិជន: ${normalizedCustomerName}`,
+          `លេខទូរស័ព្ទ: ${normalizedCustomerPhone}`,
+          `លេខនេះមាន Telegram: ${phoneHasTelegram === 'yes' ? 'មាន' : 'មិនមាន'}`,
           `URL: ${productUrl}`,
           '----------------',
           'សួស្តី! ខ្ញុំចង់បញ្ជាទិញផលិតផលនេះ។',
@@ -181,6 +190,9 @@ export function ProductDetailClient({ product, related }: Props) {
           `Quantity: ${qty}`,
           `Price: ${unitDisplay} x ${qty} = ${totalDisplay}`,
           `Display currency: ${currency}`,
+          `Customer name: ${normalizedCustomerName}`,
+          `Phone: ${normalizedCustomerPhone}`,
+          `Phone has Telegram: ${phoneHasTelegram === 'yes' ? 'Yes' : 'No'}`,
           `URL: ${productUrl}`,
           '----------------',
           'Hi! I would like to order this product.',
@@ -222,9 +234,9 @@ export function ProductDetailClient({ product, related }: Props) {
   }
 
   useEffect(() => {
-    if (!showConfirm || paymentMethod !== 'khqr' || khqrStatus !== 'idle') return
+    if (!showConfirm || !canChoosePayment || paymentMethod !== 'khqr' || khqrStatus !== 'idle') return
     void createKhqrPayment()
-  }, [showConfirm, paymentMethod, khqrStatus])
+  }, [showConfirm, canChoosePayment, paymentMethod, khqrStatus])
 
   useEffect(() => {
     if (!showConfirm || !khqrPayment || khqrStatus === 'paid') return
@@ -430,27 +442,69 @@ export function ProductDetailClient({ product, related }: Props) {
             <div className="mb-4 flex items-start justify-between gap-3">
               <div>
                 <p className="text-xs font-bold uppercase tracking-wider text-[var(--color-primary)]">{t('Secure checkout', 'ការទូទាត់សុវត្ថិភាព')}</p>
-                <h2 id="order-title" className="mt-1 text-xl font-black text-gray-950">{t('Review order request', 'ពិនិត្យសំណើបញ្ជាទិញ')}</h2>
+                <h2 id="order-title" className="mt-1 text-xl font-black text-gray-950">{t('Customer details', 'ព័ត៌មានអតិថិជន')}</h2>
               </div>
               <button type="button" onClick={() => setShowConfirm(false)} className="tap-target inline-flex items-center justify-center rounded-xl text-gray-500 hover:bg-gray-50 focus-ring" aria-label={t('Cancel', 'បោះបង់')}><X className="size-5" /></button>
+            </div>
+
+            <div className="mt-4 rounded-3xl border border-gray-100 bg-white p-4 shadow-sm">
+              <div className="grid gap-3 sm:grid-cols-2">
+                <label className="block">
+                  <span className="text-xs font-black uppercase tracking-wider text-gray-500">{t('Name', 'ឈ្មោះ')}</span>
+                  <input
+                    value={customerName}
+                    onChange={event => setCustomerName(event.target.value)}
+                    className="mt-1 h-12 w-full rounded-2xl border border-gray-200 px-4 text-sm font-semibold text-gray-950 outline-none transition focus:border-cyan-400 focus:ring-4 focus:ring-cyan-100"
+                    placeholder={t('Your name', 'ឈ្មោះរបស់អ្នក')}
+                    autoComplete="name"
+                  />
+                </label>
+                <label className="block">
+                  <span className="text-xs font-black uppercase tracking-wider text-gray-500">{t('Phone number', 'លេខទូរស័ព្ទ')}</span>
+                  <input
+                    value={customerPhone}
+                    onChange={event => setCustomerPhone(event.target.value)}
+                    className="mt-1 h-12 w-full rounded-2xl border border-gray-200 px-4 text-sm font-semibold text-gray-950 outline-none transition focus:border-cyan-400 focus:ring-4 focus:ring-cyan-100"
+                    placeholder="010 123 456"
+                    autoComplete="tel"
+                    inputMode="tel"
+                  />
+                </label>
+              </div>
+              <fieldset className="mt-4">
+                <legend className="text-xs font-black uppercase tracking-wider text-gray-500">{t('Does this phone number have Telegram?', 'លេខនេះមាន Telegram ឬទេ?')}</legend>
+                <div className="mt-2 grid grid-cols-2 gap-2 rounded-2xl bg-gray-50 p-1.5">
+                  <button type="button" onClick={() => setPhoneHasTelegram('yes')} className={`h-11 rounded-xl text-sm font-black transition-colors focus-ring ${phoneHasTelegram === 'yes' ? 'bg-white text-gray-950 shadow-sm' : 'text-gray-500 hover:text-gray-900'}`}>{t('Yes', 'មាន')}</button>
+                  <button type="button" onClick={() => setPhoneHasTelegram('no')} className={`h-11 rounded-xl text-sm font-black transition-colors focus-ring ${phoneHasTelegram === 'no' ? 'bg-white text-gray-950 shadow-sm' : 'text-gray-500 hover:text-gray-900'}`}>{t('No', 'មិនមាន')}</button>
+                </div>
+              </fieldset>
+              {!canChoosePayment && (
+                <p className="mt-3 text-xs font-semibold text-amber-700">{t('Enter your name and phone number before choosing payment.', 'សូមបញ្ចូលឈ្មោះ និងលេខទូរស័ព្ទ មុនជ្រើសរើសការទូទាត់។')}</p>
+              )}
             </div>
 
             <div className="mt-4 grid grid-cols-2 gap-2 rounded-2xl bg-gray-50 p-1.5">
               <button
                 type="button"
                 onClick={() => {
+                  if (!canChoosePayment) return
                   setPaymentMethod('khqr')
-                  if (khqrStatus === 'error' || khqrStatus === 'setup_required' || khqrStatus === 'expired') void createKhqrPayment()
+                  if (khqrStatus === 'idle' || khqrStatus === 'error' || khqrStatus === 'setup_required' || khqrStatus === 'expired') void createKhqrPayment()
                 }}
-                className={`h-11 rounded-xl text-sm font-black transition-colors focus-ring ${paymentMethod === 'khqr' ? 'bg-white text-gray-950 shadow-sm' : 'text-gray-500 hover:text-gray-900'}`}
+                disabled={!canChoosePayment}
+                className={`h-11 rounded-xl text-sm font-black transition-colors focus-ring disabled:cursor-not-allowed disabled:opacity-45 ${paymentMethod === 'khqr' ? 'bg-white text-gray-950 shadow-sm' : 'text-gray-500 hover:text-gray-900'}`}
               >
                 <QrCode className="mr-1.5 inline size-4 align-[-3px]" aria-hidden="true" />
                 KHQR
               </button>
               <button
                 type="button"
-                onClick={() => setPaymentMethod('telegram')}
-                className={`h-11 rounded-xl text-sm font-black transition-colors focus-ring ${paymentMethod === 'telegram' ? 'bg-white text-gray-950 shadow-sm' : 'text-gray-500 hover:text-gray-900'}`}
+                onClick={() => {
+                  if (!canChoosePayment) return
+                  setPaymentMethod('telegram')
+                }}
+                disabled={!canChoosePayment}
+                className={`h-11 rounded-xl text-sm font-black transition-colors focus-ring disabled:cursor-not-allowed disabled:opacity-45 ${paymentMethod === 'telegram' ? 'bg-white text-gray-950 shadow-sm' : 'text-gray-500 hover:text-gray-900'}`}
               >
                 <MessageCircle className="mr-1.5 inline size-4 align-[-3px]" aria-hidden="true" />
                 Telegram
