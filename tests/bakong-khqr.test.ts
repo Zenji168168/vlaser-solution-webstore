@@ -50,10 +50,12 @@ test('Bakong API token is server-only and not embedded in product checkout clien
   assert.doesNotMatch(statusHelper, /eyJhbGciOi/)
 })
 
-test('Bakong checkout does not show scanned before payment confirmation', () => {
+test('Bakong checkout requires customer scan confirmation before scanned state', () => {
   const clientSource = readFileSync('app/products/[id]/product-detail-client.tsx', 'utf8')
 
-  assert.match(clientSource, /Waiting for payment/)
-  assert.doesNotMatch(clientSource, /setKhqrStatus\('scanned'\)/)
-  assert.doesNotMatch(clientSource, /t\('Scanned'/)
+  assert.match(clientSource, /I have scanned/)
+  assert.match(clientSource, /បានស្កេនរួច/)
+  assert.match(clientSource, /បានទូទាត់/)
+  assert.match(clientSource, /setKhqrStatus\('scanned'\)/)
+  assert.doesNotMatch(clientSource, /data\?\.paid[\s\S]{0,140}setKhqrStatus\('scanned'\)/)
 })

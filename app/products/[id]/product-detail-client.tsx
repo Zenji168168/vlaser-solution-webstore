@@ -20,7 +20,7 @@ const TELEGRAM_URL = 'https://t.me/SANGHAMEUK'
 const KHR_RATE = 4100
 
 type PaymentMethod = 'khqr' | 'telegram'
-type KhqrStatus = 'idle' | 'creating' | 'qr' | 'paid' | 'setup_required' | 'error' | 'expired'
+type KhqrStatus = 'idle' | 'creating' | 'qr' | 'scanned' | 'paid' | 'setup_required' | 'error' | 'expired'
 
 interface KhqrPayment {
   qrImage: string
@@ -241,7 +241,7 @@ export function ProductDetailClient({ product, related }: Props) {
 
   useEffect(() => {
     if (!showConfirm || paymentMethod !== 'khqr' || !khqrPayment || !khqrPayment.syncAvailable) return
-    if (khqrStatus !== 'qr') return
+    if (khqrStatus !== 'qr' && khqrStatus !== 'scanned') return
 
     let stopped = false
     const expiresAt = new Date(khqrPayment.expiresAt).getTime()
@@ -264,10 +264,7 @@ export function ProductDetailClient({ product, related }: Props) {
           if (response.status === 503) setKhqrStatus('setup_required')
           return
         }
-        if (data?.paid || data?.status === 'paid') {
-          setKhqrStatus('paid')
-          return
-        }
+        if (data?.paid || data?.status === 'paid') setKhqrStatus('paid')
       } catch {
         return
       }
@@ -501,22 +498,24 @@ export function ProductDetailClient({ product, related }: Props) {
                   </div>
                   <span className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-black ${
                     khqrStatus === 'paid' ? 'bg-emerald-50 text-emerald-700' :
+                    khqrStatus === 'scanned' ? 'bg-cyan-50 text-cyan-700' :
                     khqrStatus === 'setup_required' || khqrStatus === 'error' || khqrStatus === 'expired' ? 'bg-amber-50 text-amber-700' :
                     'bg-cyan-50 text-cyan-700'
                   }`}>
                     {khqrStatus === 'creating' && <Loader2 className="size-3 animate-spin" aria-hidden="true" />}
                     {khqrStatus === 'paid' && <CheckCircle2 className="size-3" aria-hidden="true" />}
                     {(khqrStatus === 'setup_required' || khqrStatus === 'error' || khqrStatus === 'expired') && <AlertCircle className="size-3" aria-hidden="true" />}
-                    {khqrStatus === 'paid' ? t('Paid', 'បានបង់') :
+                    {khqrStatus === 'paid' ? t('Paid', 'បានទូទាត់') :
+                      khqrStatus === 'scanned' ? t('Scanned', 'បានស្កេន') :
                       khqrStatus === 'creating' ? t('Preparing', 'កំពុងរៀបចំ') :
                       khqrStatus === 'setup_required' ? t('Setup required', 'ត្រូវការកំណត់') :
                       khqrStatus === 'expired' ? t('Expired', 'ផុតកំណត់') :
                       khqrStatus === 'error' ? t('Try again', 'ព្យាយាមម្តងទៀត') :
-                      t('Waiting for payment', 'រង់ចាំការទូទាត់')}
+                      t('Scan QR', 'ស្កេន QR')}
                   </span>
                 </div>
 
-                {khqrPayment && (khqrStatus === 'qr' || khqrStatus === 'paid') ? (
+                {khqrPayment && (khqrStatus === 'qr' || khqrStatus === 'scanned' || khqrStatus === 'paid') ? (
                   <div className="mt-4 text-center">
                     <div className="mx-auto flex max-w-[292px] items-center justify-center rounded-[1.75rem] border border-gray-100 bg-white p-3 shadow-[0_18px_50px_rgba(15,23,42,0.10)]">
                       <img src={khqrPayment.qrImage} alt={t('Bakong KHQR payment code', 'កូដទូទាត់ Bakong KHQR')} className="h-auto w-full rounded-2xl" />
@@ -534,10 +533,24 @@ export function ProductDetailClient({ product, related }: Props) {
                     <p className="mt-2 text-xs leading-5 text-gray-500">
                       {khqrStatus === 'paid'
                         ? t('Payment received. Our sales team will confirm your order.', 'បានទទួលការទូទាត់។ ក្រុមលក់នឹងបញ្ជាក់ការបញ្ជាទិញរបស់អ្នក។')
+                        : khqrStatus === 'scanned'
+                          ? t('Scanned. Please complete payment in your banking app.', 'បានស្កេន។ សូមបញ្ចប់ការទូទាត់ក្នុងកម្មវិធីធនាគាររបស់អ្នក។')
                         : khqrPayment.syncAvailable
-                          ? t('Scan with Bakong or any KHQR app. We will change this to Paid after payment is confirmed.', 'ស្កេនជាមួយ Bakong ឬកម្មវិធី KHQR។ យើងនឹងប្ដូរទៅបានបង់ បន្ទាប់ពីបញ្ជាក់ការទូទាត់។')
+                          ? t('Scan with Bakong or any KHQR app, then tap I have scanned.', 'ស្កេនជាមួយ Bakong ឬកម្មវិធី KHQR រួចចុច បានស្កេនរួច។')
                           : t('KHQR is ready, but automatic payment sync needs setup.', 'KHQR រួចរាល់ ប៉ុន្តែការធ្វើសមកាលកម្មការទូទាត់ស្វ័យប្រវត្តិត្រូវការកំណត់។')}
                     </p>
+                    {khqrStatus === 'qr' && (
+                      <button type="button" onClick={() => setKhqrStatus('scanned')} className="btn-primary mx-auto mt-4 h-11 w-full max-w-[292px] text-sm">
+                        <QrCode className="size-4" aria-hidden="true" />
+                        {t('I have scanned', 'បានស្កេនរួច')}
+                      </button>
+                    )}
+                    {khqrStatus === 'scanned' && (
+                      <div className="mx-auto mt-4 flex max-w-[292px] items-center justify-center gap-2 rounded-2xl bg-cyan-50 px-4 py-3 text-sm font-bold text-cyan-800">
+                        <Loader2 className="size-4 animate-spin" aria-hidden="true" />
+                        {t('Checking payment...', 'កំពុងពិនិត្យការទូទាត់...')}
+                      </div>
+                    )}
                   </div>
                 ) : (
                   <div className="mt-4 flex min-h-40 items-center justify-center rounded-3xl bg-gray-50 p-5 text-center">
