@@ -41,11 +41,20 @@ async function checkWithAuthorization(url: string, body: Record<string, unknown>
 
   const payload = await response.json().catch(() => null)
   const record = payload && typeof payload === 'object' ? payload as Record<string, unknown> : {}
+  const providerMessage = typeof record.responseMessage === 'string' ? record.responseMessage.slice(0, 120) : undefined
+  if (providerMessage?.toLowerCase().includes('limit')) {
+    return {
+      status: 'unavailable',
+      providerStatus: response.status,
+      providerCode: record.responseCode,
+      providerMessage,
+    }
+  }
   return {
     status: isPaidPayload(payload, String(body.md5 || body.hash || '')) ? 'paid' : 'unpaid',
     providerStatus: response.status,
     providerCode: record.responseCode,
-    providerMessage: typeof record.responseMessage === 'string' ? record.responseMessage.slice(0, 120) : undefined,
+    providerMessage,
   }
 }
 

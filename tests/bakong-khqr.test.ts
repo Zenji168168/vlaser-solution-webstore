@@ -73,6 +73,18 @@ test('Bakong status supports receipt short-hash paid verification', () => {
   assert.match(clientSource, /Confirm paid/)
 })
 
+test('Bakong checkout handles provider limit without burning requests', () => {
+  const statusHelper = readFileSync('lib/bakong/status.ts', 'utf8')
+  const clientSource = readFileSync('app/products/[id]/product-detail-client.tsx', 'utf8')
+
+  assert.match(statusHelper, /includes\('limit'\)/)
+  assert.match(statusHelper, /status: 'unavailable'/)
+  assert.match(clientSource, /providerMessage/)
+  assert.match(clientSource, /setKhqrStatus\('error'\)/)
+  assert.match(clientSource, /setInterval\(checkStatus, 15000\)/)
+  assert.match(clientSource, /checkCount > 30/)
+})
+
 test('Bakong checkout does not show scanned without a real provider signal', () => {
   const clientSource = readFileSync('app/products/[id]/product-detail-client.tsx', 'utf8')
 

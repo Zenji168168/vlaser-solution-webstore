@@ -270,6 +270,10 @@ export function ProductDetailClient({ product, related }: Props) {
         setKhqrStatus('paid')
         return
       }
+      if (data?.status === 'unavailable') {
+        setReceiptError(data?.providerMessage || t('Bakong payment sync is temporarily unavailable. Please try again later.', 'ការធ្វើសមកាលកម្ម Bakong មិនអាចប្រើបានបណ្តោះអាសន្ន។ សូមព្យាយាមម្តងទៀតពេលក្រោយ។'))
+        return
+      }
       setReceiptError(t('Payment was not confirmed yet. Please check the hash and try again.', 'មិនទាន់បញ្ជាក់ការទូទាត់ទេ។ សូមពិនិត្យលេខ hash ហើយព្យាយាមម្តងទៀត។'))
     } catch {
       setReceiptError(t('Payment check failed. Please try again.', 'ពិនិត្យការទូទាត់មិនបាន។ សូមព្យាយាមម្តងទៀត។'))
@@ -301,14 +305,17 @@ export function ProductDetailClient({ product, related }: Props) {
     if (khqrStatus !== 'qr') return
 
     let stopped = false
+    let checkCount = 0
     const expiresAt = new Date(khqrPayment.expiresAt).getTime()
 
     const checkStatus = async () => {
       if (stopped) return
+      checkCount += 1
       if (Date.now() > expiresAt) {
         setKhqrStatus('expired')
         return
       }
+      if (checkCount > 30) return
 
       try {
         const response = await fetch('/api/bakong/status', {
@@ -322,13 +329,17 @@ export function ProductDetailClient({ product, related }: Props) {
           return
         }
         if (data?.paid || data?.status === 'paid') setKhqrStatus('paid')
+        if (data?.status === 'unavailable') {
+          setKhqrStatus('error')
+          setKhqrMessage(data?.providerMessage || t('Bakong payment sync is temporarily unavailable. Please use your payment receipt to confirm with sales.', 'ការធ្វើសមកាលកម្ម Bakong មិនអាចប្រើបានបណ្តោះអាសន្ន។ សូមប្រើវិក្កយបត្រទូទាត់ដើម្បីបញ្ជាក់ជាមួយផ្នែកលក់។'))
+        }
       } catch {
         return
       }
     }
 
-    const timer = window.setInterval(checkStatus, 3500)
-    const firstCheck = window.setTimeout(checkStatus, 1800)
+    const timer = window.setInterval(checkStatus, 15000)
+    const firstCheck = window.setTimeout(checkStatus, 3000)
 
     return () => {
       stopped = true
