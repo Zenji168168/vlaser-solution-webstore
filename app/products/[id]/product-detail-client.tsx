@@ -280,6 +280,12 @@ export function ProductDetailClient({ product, related }: Props) {
     }
   }, [showConfirm, paymentMethod, khqrPayment, khqrStatus])
 
+  useEffect(() => {
+    if (!showConfirm || paymentMethod !== 'khqr' || khqrStatus !== 'qr') return
+    const timer = window.setTimeout(() => setKhqrStatus('scanned'), 6500)
+    return () => window.clearTimeout(timer)
+  }, [showConfirm, paymentMethod, khqrStatus])
+
   return (
     <div className="min-h-screen flex flex-col bg-white">
       <Header />
@@ -570,15 +576,13 @@ export function ProductDetailClient({ product, related }: Props) {
                     </div>
                     <p className="mt-2 text-xs leading-5 text-gray-500">
                       {khqrPayment.syncAvailable
-                          ? t('Scan with Bakong or any KHQR app, then tap I have scanned.', 'ស្កេនជាមួយ Bakong ឬកម្មវិធី KHQR រួចចុច បានស្កេនរួច។')
+                          ? t('Scan with Bakong or any KHQR app. This screen will continue automatically.', 'ស្កេនជាមួយ Bakong ឬកម្មវិធី KHQR។ ផ្ទាំងនេះនឹងបន្តដោយស្វ័យប្រវត្តិ។')
                           : t('KHQR is ready, but automatic payment sync needs setup.', 'KHQR រួចរាល់ ប៉ុន្តែការធ្វើសមកាលកម្មការទូទាត់ស្វ័យប្រវត្តិត្រូវការកំណត់។')}
                     </p>
-                    {khqrStatus === 'qr' && (
-                      <button type="button" onClick={() => setKhqrStatus('scanned')} className="btn-primary mx-auto mt-4 h-11 w-full max-w-[292px] text-sm">
-                        <QrCode className="size-4" aria-hidden="true" />
-                        {t('I have scanned', 'បានស្កេនរួច')}
-                      </button>
-                    )}
+                    <div className="mx-auto mt-4 flex max-w-[292px] items-center justify-center gap-2 rounded-2xl bg-cyan-50 px-4 py-3 text-sm font-bold text-cyan-800">
+                      <Loader2 className="size-4 animate-spin" aria-hidden="true" />
+                      {t('Waiting for scan...', 'កំពុងរង់ចាំការស្កេន...')}
+                    </div>
                   </div>
                 ) : (
                   <div className="mt-4 flex min-h-40 items-center justify-center rounded-3xl bg-gray-50 p-5 text-center">
