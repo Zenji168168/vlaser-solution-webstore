@@ -5,6 +5,8 @@ export type BakongPaymentStatus = 'setup_required' | 'unpaid' | 'paid' | 'unavai
 interface ProviderResult {
   status: BakongPaymentStatus
   providerStatus?: number
+  providerCode?: unknown
+  providerMessage?: string
 }
 
 const BAKONG_STATUS_URL = 'https://api-bakong.nbc.gov.kh/v1/check_transaction_by_md5'
@@ -38,9 +40,12 @@ async function checkWithAuthorization(url: string, body: Record<string, unknown>
   if (!response.ok) return { status: 'unavailable', providerStatus: response.status }
 
   const payload = await response.json().catch(() => null)
+  const record = payload && typeof payload === 'object' ? payload as Record<string, unknown> : {}
   return {
     status: isPaidPayload(payload, String(body.md5 || body.hash || '')) ? 'paid' : 'unpaid',
     providerStatus: response.status,
+    providerCode: record.responseCode,
+    providerMessage: typeof record.responseMessage === 'string' ? record.responseMessage.slice(0, 120) : undefined,
   }
 }
 

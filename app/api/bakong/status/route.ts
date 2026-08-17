@@ -34,6 +34,8 @@ export async function POST(request: Request) {
       status: result.status,
       paid: result.status === 'paid',
       providerStatus: result.providerStatus,
+      providerCode: result.providerCode,
+      providerMessage: result.providerMessage,
       orderStored: Boolean(order),
     }, { status: httpStatus })
   } catch {
