@@ -20,7 +20,7 @@ const TELEGRAM_URL = 'https://t.me/SANGHAMEUK'
 const KHR_RATE = 4100
 
 type PaymentMethod = 'khqr' | 'telegram'
-type KhqrStatus = 'idle' | 'creating' | 'qr' | 'scanned' | 'paid' | 'setup_required' | 'error' | 'expired'
+type KhqrStatus = 'idle' | 'creating' | 'qr' | 'paid' | 'setup_required' | 'error' | 'expired'
 
 interface KhqrPayment {
   qrImage: string
@@ -241,7 +241,7 @@ export function ProductDetailClient({ product, related }: Props) {
 
   useEffect(() => {
     if (!showConfirm || paymentMethod !== 'khqr' || !khqrPayment || !khqrPayment.syncAvailable) return
-    if (khqrStatus !== 'qr' && khqrStatus !== 'scanned') return
+    if (khqrStatus !== 'qr') return
 
     let stopped = false
     const expiresAt = new Date(khqrPayment.expiresAt).getTime()
@@ -279,12 +279,6 @@ export function ProductDetailClient({ product, related }: Props) {
       window.clearTimeout(firstCheck)
     }
   }, [showConfirm, paymentMethod, khqrPayment, khqrStatus])
-
-  useEffect(() => {
-    if (!showConfirm || paymentMethod !== 'khqr' || khqrStatus !== 'qr') return
-    const timer = window.setTimeout(() => setKhqrStatus('scanned'), 6500)
-    return () => window.clearTimeout(timer)
-  }, [showConfirm, paymentMethod, khqrStatus])
 
   return (
     <div className="min-h-screen flex flex-col bg-white">
@@ -517,14 +511,12 @@ export function ProductDetailClient({ product, related }: Props) {
                   </div>
                   <span className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-black ${
                     khqrStatus === 'paid' ? 'bg-emerald-50 text-emerald-700' :
-                    khqrStatus === 'scanned' ? 'bg-cyan-50 text-cyan-700' :
                     khqrStatus === 'setup_required' || khqrStatus === 'error' || khqrStatus === 'expired' ? 'bg-amber-50 text-amber-700' :
                     'bg-cyan-50 text-cyan-700'
                   }`}>
                     {khqrStatus === 'paid' && <CheckCircle2 className="size-3" aria-hidden="true" />}
                     {(khqrStatus === 'setup_required' || khqrStatus === 'error' || khqrStatus === 'expired') && <AlertCircle className="size-3" aria-hidden="true" />}
                     {khqrStatus === 'paid' ? t('Paid', 'បានទូទាត់') :
-                      khqrStatus === 'scanned' ? t('Scanned', 'បានស្កេន') :
                       khqrStatus === 'setup_required' ? t('Setup required', 'ត្រូវការកំណត់') :
                       khqrStatus === 'expired' ? t('Expired', 'ផុតកំណត់') :
                       khqrStatus === 'error' ? t('Try again', 'ព្យាយាមម្តងទៀត') :
@@ -532,24 +524,7 @@ export function ProductDetailClient({ product, related }: Props) {
                   </span>
                 </div>
 
-                {khqrPayment && khqrStatus === 'scanned' ? (
-                  <div className="flex min-h-[360px] items-center justify-center text-center">
-                    <div>
-                      <div className="mx-auto flex size-36 items-center justify-center rounded-[2rem] bg-cyan-50">
-                        <div className="relative">
-                          <QrCode className="size-16 text-gray-400" aria-hidden="true" />
-                          <CheckCircle2 className="absolute -right-2 -top-2 size-7 rounded-full bg-white text-emerald-500" aria-hidden="true" />
-                        </div>
-                      </div>
-                      <h3 className="mt-8 text-2xl font-black text-gray-950">{t('QR code is scanned', 'បានស្កេន QR រួច')}</h3>
-                      <p className="mx-auto mt-4 max-w-sm text-base leading-7 text-gray-600">{t('Please follow the instruction in your banking app to finish payment.', 'សូមធ្វើតាមការណែនាំក្នុងកម្មវិធីធនាគាររបស់អ្នក ដើម្បីបញ្ចប់ការទូទាត់។')}</p>
-                      <div className="mx-auto mt-7 flex max-w-[292px] items-center justify-center gap-2 rounded-2xl bg-cyan-50 px-4 py-3 text-sm font-bold text-cyan-800">
-                        <Loader2 className="size-4 animate-spin" aria-hidden="true" />
-                        {t('Checking payment...', 'កំពុងពិនិត្យការទូទាត់...')}
-                      </div>
-                    </div>
-                  </div>
-                ) : khqrPayment && khqrStatus === 'paid' ? (
+                {khqrPayment && khqrStatus === 'paid' ? (
                   <div className="flex min-h-[360px] items-center justify-center text-center">
                     <div>
                       <div className="mx-auto flex size-36 items-center justify-center rounded-[2rem] bg-emerald-50">
@@ -581,7 +556,7 @@ export function ProductDetailClient({ product, related }: Props) {
                     </p>
                     <div className="mx-auto mt-4 flex max-w-[292px] items-center justify-center gap-2 rounded-2xl bg-cyan-50 px-4 py-3 text-sm font-bold text-cyan-800">
                       <Loader2 className="size-4 animate-spin" aria-hidden="true" />
-                      {t('Waiting for scan...', 'កំពុងរង់ចាំការស្កេន...')}
+                      {t('Waiting for payment...', 'កំពុងរង់ចាំការទូទាត់...')}
                     </div>
                   </div>
                 ) : (
