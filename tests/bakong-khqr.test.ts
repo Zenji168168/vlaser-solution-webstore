@@ -53,10 +53,24 @@ test('Bakong API token is server-only and not embedded in product checkout clien
 test('Bakong status checks both supported authorization formats', () => {
   const statusHelper = readFileSync('lib/bakong/status.ts', 'utf8')
 
-  assert.match(statusHelper, /checkWithAuthorization\(md5, token\)/)
-  assert.match(statusHelper, /checkWithAuthorization\(md5, `Bearer \$\{token\}`\)/)
+  assert.match(statusHelper, /checkWithAuthorization\(BAKONG_STATUS_URL, \{ md5 \}, token\)/)
+  assert.match(statusHelper, /checkWithAuthorization\(BAKONG_STATUS_URL, \{ md5 \}, `Bearer \$\{token\}`\)/)
   assert.match(statusHelper, /rawResult\.status === 'paid'/)
   assert.match(statusHelper, /bearerResult\.status === 'paid'/)
+})
+
+test('Bakong status supports receipt short-hash paid verification', () => {
+  const statusHelper = readFileSync('lib/bakong/status.ts', 'utf8')
+  const statusRoute = readFileSync('app/api/bakong/status/route.ts', 'utf8')
+  const clientSource = readFileSync('app/products/[id]/product-detail-client.tsx', 'utf8')
+
+  assert.match(statusHelper, /check_transaction_by_short_hash/)
+  assert.match(statusHelper, /checkBakongPaymentByShortHash/)
+  assert.match(statusRoute, /shortHash/)
+  assert.match(statusRoute, /checkBakongPaymentByShortHash/)
+  assert.match(clientSource, /Already paid\?/)
+  assert.match(clientSource, /receiptHash/)
+  assert.match(clientSource, /Confirm paid/)
 })
 
 test('Bakong checkout does not show scanned without a real provider signal', () => {

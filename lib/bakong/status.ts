@@ -8,6 +8,7 @@ interface ProviderResult {
 }
 
 const BAKONG_STATUS_URL = 'https://api-bakong.nbc.gov.kh/v1/check_transaction_by_md5'
+const BAKONG_SHORT_HASH_STATUS_URL = 'https://api-bakong.nbc.gov.kh/v1/check_transaction_by_short_hash'
 
 function isPaidPayload(payload: unknown, md5: string) {
   if (Array.isArray(payload)) return payload.some(item => String(item).toLowerCase() === md5.toLowerCase())
@@ -21,14 +22,14 @@ function isPaidPayload(payload: unknown, md5: string) {
   return false
 }
 
-async function checkWithAuthorization(md5: string, authorization: string): Promise<ProviderResult> {
-  const response = await fetch(BAKONG_STATUS_URL, {
+async function checkWithAuthorization(url: string, body: Record<string, unknown>, authorization: string): Promise<ProviderResult> {
+  const response = await fetch(url, {
     method: 'POST',
     headers: {
       Authorization: authorization,
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify({ md5 }),
+    body: JSON.stringify(body),
     cache: 'no-store',
   })
 
@@ -38,7 +39,7 @@ async function checkWithAuthorization(md5: string, authorization: string): Promi
 
   const payload = await response.json().catch(() => null)
   return {
-    status: isPaidPayload(payload, md5) ? 'paid' : 'unpaid',
+    status: isPaidPayload(payload, String(body.md5 || body.hash || '')) ? 'paid' : 'unpaid',
     providerStatus: response.status,
   }
 }
@@ -47,10 +48,31 @@ export async function checkBakongPayment(md5: string): Promise<ProviderResult> {
   const token = process.env.BAKONG_API_TOKEN
   if (!token) return { status: 'setup_required' }
 
-  const rawResult = await checkWithAuthorization(md5, token)
+  const rawResult = await checkWithAuthorization(BAKONG_STATUS_URL, { md5 }, token)
   if (rawResult.status === 'paid') return rawResult
 
-  const bearerResult = await checkWithAuthorization(md5, `Bearer ${token}`)
+  const bearerResult = await checkWithAuthorization(BAKONG_STATUS_URL, { md5 }, `Bearer ${token}`)
+  if (bearerResult.status === 'paid') return bearerResult
+  if (rawResult.providerStatus !== 401 && rawResult.providerStatus !== 403) return rawResult
+  return bearerResult
+}
+
+export async function checkBakongPaymentByShortHash(shortHash: string, amount: number, currency: 'USD' | 'KHR'): Promise<ProviderResult> {
+  const token = process.env.BAKONG_API_TOKEN
+  if (!token) return { status: 'setup_required' }
+
+  const safeHash = shortHash.trim().toLowerCase()
+  if (!/^[a-f0-9]{8}$/.test(safeHash) || !Number.isFinite(amount) || amount <= 0) return { status: 'unpaid' }
+
+  const body = {
+    hash: safeHash,
+    amount: currency === 'KHR' ? Math.round(amount) : Number(amount.toFixed(2)),
+    currency,
+  }
+  const rawResult = await checkWithAuthorization(BAKONG_SHORT_HASH_STATUS_URL, body, token)
+  if (rawResult.status === 'paid') return rawResult
+
+  const bearerResult = await checkWithAuthorization(BAKONG_SHORT_HASH_STATUS_URL, body, `Bearer ${token}`)
   if (bearerResult.status === 'paid') return bearerResult
   if (rawResult.providerStatus !== 401 && rawResult.providerStatus !== 403) return rawResult
   return bearerResult
