@@ -506,8 +506,8 @@ export function ProductDetailClient({ product, related }: Props) {
                 <div className="p-4">
                 <div className="flex items-center justify-between gap-3">
                   <div>
-                    <p className="mt-1 text-sm font-bold text-gray-950">{t('Scan to pay', 'ស្កេនដើម្បីទូទាត់')}</p>
-                    <p className="mt-1 text-xs text-gray-500">{t('Keep this window open while we check payment automatically.', 'សូមបើកផ្ទាំងនេះទុក ខណៈយើងពិនិត្យការទូទាត់ដោយស្វ័យប្រវត្តិ។')}</p>
+                    <p className="mt-1 text-sm font-bold text-gray-950">{t('Not yet scanned', 'មិនទាន់ស្កេន')}</p>
+                    <p className="mt-1 text-xs text-gray-500">{t('Scan the QR with Bakong or any KHQR app. We will show paid only after payment is confirmed.', 'សូមស្កេន QR ជាមួយ Bakong ឬកម្មវិធី KHQR។ យើងនឹងបង្ហាញបានទូទាត់ តែបន្ទាប់ពីការទូទាត់ត្រូវបានបញ្ជាក់។')}</p>
                   </div>
                   <span className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-black ${
                     khqrStatus === 'paid' ? 'bg-emerald-50 text-emerald-700' :
@@ -520,7 +520,7 @@ export function ProductDetailClient({ product, related }: Props) {
                       khqrStatus === 'setup_required' ? t('Setup required', 'ត្រូវការកំណត់') :
                       khqrStatus === 'expired' ? t('Expired', 'ផុតកំណត់') :
                       khqrStatus === 'error' ? t('Try again', 'ព្យាយាមម្តងទៀត') :
-                      t('Scan QR', 'ស្កេន QR')}
+                      t('Not yet scanned', 'មិនទាន់ស្កេន')}
                   </span>
                 </div>
 
@@ -551,12 +551,12 @@ export function ProductDetailClient({ product, related }: Props) {
                     </div>
                     <p className="mt-2 text-xs leading-5 text-gray-500">
                       {khqrPayment.syncAvailable
-                          ? t('Scan with Bakong or any KHQR app. This screen will continue automatically.', 'ស្កេនជាមួយ Bakong ឬកម្មវិធី KHQR។ ផ្ទាំងនេះនឹងបន្តដោយស្វ័យប្រវត្តិ។')
+                          ? t('Not scanned yet. Waiting for Bakong payment confirmation.', 'មិនទាន់ស្កេនទេ។ កំពុងរង់ចាំការបញ្ជាក់ការទូទាត់ពី Bakong។')
                           : t('KHQR is ready, but automatic payment sync needs setup.', 'KHQR រួចរាល់ ប៉ុន្តែការធ្វើសមកាលកម្មការទូទាត់ស្វ័យប្រវត្តិត្រូវការកំណត់។')}
                     </p>
                     <div className="mx-auto mt-4 flex max-w-[292px] items-center justify-center gap-2 rounded-2xl bg-cyan-50 px-4 py-3 text-sm font-bold text-cyan-800">
                       <Loader2 className="size-4 animate-spin" aria-hidden="true" />
-                      {t('Waiting for payment...', 'កំពុងរង់ចាំការទូទាត់...')}
+                      {t('Not yet scanned. Waiting for payment...', 'មិនទាន់ស្កេន។ កំពុងរង់ចាំការទូទាត់...')}
                     </div>
                   </div>
                 ) : (
