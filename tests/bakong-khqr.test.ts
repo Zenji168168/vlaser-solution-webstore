@@ -1,6 +1,7 @@
 import { readFileSync } from 'fs'
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
+import { BakongKHQR } from 'bakong-khqr'
 import { buildKhqrPayment, createPaymentReference, normalizeBakongAmount } from '../lib/bakong/khqr'
 
 test('Bakong KHQR builder creates a dynamic payment payload and md5', () => {
@@ -13,18 +14,20 @@ test('Bakong KHQR builder creates a dynamic payment payload and md5', () => {
     billNumber: 'VLS-P0001-TEST',
   })
 
+  assert.equal(BakongKHQR.verify(payment.qr).isValid, true)
   assert.match(payment.qr, /^000201010212/)
   assert.match(payment.qr, /29220018thareach_meuk@bkrt/)
   assert.match(payment.qr, /5303116/)
   assert.match(payment.qr, /540541000/)
+  assert.match(payment.qr, /9934/)
   assert.match(payment.qr, /6304[A-F0-9]{4}$/)
   assert.match(payment.md5, /^[a-f0-9]{32}$/)
   assert.equal(payment.billNumber, 'VLS-P0001-TEST')
 })
 
 test('Bakong KHQR amount normalization supports KHR and USD safely', () => {
-  assert.equal(normalizeBakongAmount(4100.49, 'KHR'), '4100')
-  assert.equal(normalizeBakongAmount(12.5, 'USD'), '12.50')
+  assert.equal(normalizeBakongAmount(4100.49, 'KHR'), 4100)
+  assert.equal(normalizeBakongAmount(12.5, 'USD'), 12.5)
   assert.throws(() => normalizeBakongAmount(0, 'KHR'), /Invalid payment amount/)
   assert.throws(() => normalizeBakongAmount(Number.NaN, 'USD'), /Invalid payment amount/)
 })
