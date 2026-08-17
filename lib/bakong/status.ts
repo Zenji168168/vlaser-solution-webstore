@@ -64,16 +64,29 @@ export async function checkBakongPaymentByShortHash(shortHash: string, amount: n
   const safeHash = shortHash.trim().toLowerCase()
   if (!/^[a-f0-9]{8}$/.test(safeHash) || !Number.isFinite(amount) || amount <= 0) return { status: 'unpaid' }
 
-  const body = {
+  const merchantAccount = process.env.BAKONG_MERCHANT_ACCOUNT || 'thareach_meuk@bkrt'
+  const baseBody = {
     hash: safeHash,
-    amount: currency === 'KHR' ? Math.round(amount) : Number(amount.toFixed(2)),
+    amount: currency === 'KHR' ? String(Math.round(amount)) : amount.toFixed(2),
     currency,
   }
-  const rawResult = await checkWithAuthorization(BAKONG_SHORT_HASH_STATUS_URL, body, token)
-  if (rawResult.status === 'paid') return rawResult
+  const bodies = [
+    { ...baseBody, receiver: merchantAccount },
+    { ...baseBody, receiverAccount: merchantAccount },
+    { ...baseBody, receiverAccountId: merchantAccount },
+    baseBody,
+  ]
 
-  const bearerResult = await checkWithAuthorization(BAKONG_SHORT_HASH_STATUS_URL, body, `Bearer ${token}`)
-  if (bearerResult.status === 'paid') return bearerResult
-  if (rawResult.providerStatus !== 401 && rawResult.providerStatus !== 403) return rawResult
-  return bearerResult
+  let fallback: ProviderResult = { status: 'unpaid' }
+  for (const body of bodies) {
+    const rawResult = await checkWithAuthorization(BAKONG_SHORT_HASH_STATUS_URL, body, token)
+    if (rawResult.status === 'paid') return rawResult
+    if (rawResult.providerStatus !== 401 && rawResult.providerStatus !== 403) fallback = rawResult
+
+    const bearerResult = await checkWithAuthorization(BAKONG_SHORT_HASH_STATUS_URL, body, `Bearer ${token}`)
+    if (bearerResult.status === 'paid') return bearerResult
+    if (fallback.status === 'unpaid' && bearerResult.providerStatus) fallback = bearerResult
+  }
+
+  return fallback
 }
