@@ -55,9 +55,6 @@ export function ProductDetailClient({ product, related }: Props) {
   const [khqrPayment, setKhqrPayment] = useState<KhqrPayment | null>(null)
   const [khqrMessage, setKhqrMessage] = useState('')
   const [khqrRemainingSeconds, setKhqrRemainingSeconds] = useState(0)
-  const [receiptHash, setReceiptHash] = useState('')
-  const [receiptChecking, setReceiptChecking] = useState(false)
-  const [receiptError, setReceiptError] = useState('')
   const [customerName, setCustomerName] = useState('')
   const [customerPhone, setCustomerPhone] = useState('')
   const [phoneHasTelegram, setPhoneHasTelegram] = useState<'yes' | 'no'>('yes')
@@ -145,9 +142,6 @@ export function ProductDetailClient({ product, related }: Props) {
     setKhqrPayment(null)
     setKhqrMessage('')
     setKhqrRemainingSeconds(0)
-    setReceiptHash('')
-    setReceiptChecking(false)
-    setReceiptError('')
   }, [showConfirm])
 
   const desc = parseDescription(product.description)
@@ -240,45 +234,6 @@ export function ProductDetailClient({ product, related }: Props) {
     } catch {
       setKhqrStatus('error')
       setKhqrMessage(t('KHQR payment could not start. Please try again.', 'មិនអាចចាប់ផ្តើមការទូទាត់ KHQR បានទេ។ សូមព្យាយាមម្តងទៀត។'))
-    }
-  }
-
-  const verifyReceiptHash = async () => {
-    if (!khqrPayment || receiptChecking) return
-    const safeHash = receiptHash.trim().toLowerCase()
-    if (!/^[a-f0-9]{8}$/.test(safeHash)) {
-      setReceiptError(t('Enter the 8-character Bakong hash from your receipt.', 'សូមបញ្ចូលលេខ Bakong hash ៨ តួអក្សរពីវិក្កយបត្រ។'))
-      return
-    }
-
-    setReceiptChecking(true)
-    setReceiptError('')
-
-    try {
-      const response = await fetch('/api/bakong/status', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          md5: khqrPayment.md5,
-          shortHash: safeHash,
-          amount: Number(khqrPayment.amount),
-          currency: khqrPayment.currency,
-        }),
-      })
-      const data = await response.json().catch(() => null)
-      if (response.ok && (data?.paid || data?.status === 'paid')) {
-        setKhqrStatus('paid')
-        return
-      }
-      if (data?.status === 'unavailable') {
-        setReceiptError(data?.providerMessage || t('Bakong payment sync is temporarily unavailable. Please try again later.', 'ការធ្វើសមកាលកម្ម Bakong មិនអាចប្រើបានបណ្តោះអាសន្ន។ សូមព្យាយាមម្តងទៀតពេលក្រោយ។'))
-        return
-      }
-      setReceiptError(t('Payment was not confirmed yet. Please check the hash and try again.', 'មិនទាន់បញ្ជាក់ការទូទាត់ទេ។ សូមពិនិត្យលេខ hash ហើយព្យាយាមម្តងទៀត។'))
-    } catch {
-      setReceiptError(t('Payment check failed. Please try again.', 'ពិនិត្យការទូទាត់មិនបាន។ សូមព្យាយាមម្តងទៀត។'))
-    } finally {
-      setReceiptChecking(false)
     }
   }
 
@@ -667,33 +622,6 @@ export function ProductDetailClient({ product, related }: Props) {
                     <div className="mx-auto mt-4 flex max-w-[292px] items-center justify-center gap-2 rounded-2xl bg-cyan-50 px-4 py-3 text-sm font-bold text-cyan-800">
                       <Loader2 className="size-4 animate-spin" aria-hidden="true" />
                       {t('Waiting for Bakong payment confirmation...', 'កំពុងរង់ចាំការបញ្ជាក់ការទូទាត់ពី Bakong...')}
-                    </div>
-                    <div className="mx-auto mt-4 max-w-[292px] rounded-2xl border border-gray-100 bg-gray-50 p-3 text-left">
-                      <label className="block">
-                        <span className="text-[11px] font-black uppercase tracking-wider text-gray-500">{t('Already paid?', 'បានទូទាត់រួច?')}</span>
-                        <span className="mt-1 block text-xs leading-5 text-gray-500">{t('Enter the 8-character Bakong hash from your receipt.', 'បញ្ចូលលេខ Bakong hash ៨ តួអក្សរពីវិក្កយបត្រ។')}</span>
-                        <input
-                          value={receiptHash}
-                          onChange={event => {
-                            setReceiptHash(event.target.value.replace(/[^a-fA-F0-9]/g, '').slice(0, 8))
-                            setReceiptError('')
-                          }}
-                          className="mt-2 h-11 w-full rounded-xl border border-gray-200 bg-white px-3 font-mono text-sm font-bold uppercase tracking-wider text-gray-950 outline-none transition focus:border-cyan-400 focus:ring-4 focus:ring-cyan-100"
-                          placeholder="c81cdc27"
-                          inputMode="text"
-                          autoComplete="off"
-                        />
-                      </label>
-                      {receiptError && <p className="mt-2 text-xs font-semibold text-amber-700">{receiptError}</p>}
-                      <button
-                        type="button"
-                        onClick={verifyReceiptHash}
-                        disabled={receiptChecking || receiptHash.trim().length !== 8}
-                        className="mt-3 inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-xl bg-slate-950 px-4 text-sm font-black text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50 focus-ring"
-                      >
-                        {receiptChecking && <Loader2 className="size-4 animate-spin" aria-hidden="true" />}
-                        {t('Confirm paid', 'បញ្ជាក់បានទូទាត់')}
-                      </button>
                     </div>
                   </div>
                 ) : (

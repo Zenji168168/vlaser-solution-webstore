@@ -59,18 +59,23 @@ test('Bakong status checks both supported authorization formats', () => {
   assert.match(statusHelper, /bearerResult\.status === 'paid'/)
 })
 
-test('Bakong status supports receipt short-hash paid verification', () => {
+test('Bakong status supports server-side receipt short-hash paid verification', () => {
   const statusHelper = readFileSync('lib/bakong/status.ts', 'utf8')
   const statusRoute = readFileSync('app/api/bakong/status/route.ts', 'utf8')
-  const clientSource = readFileSync('app/products/[id]/product-detail-client.tsx', 'utf8')
 
   assert.match(statusHelper, /check_transaction_by_short_hash/)
   assert.match(statusHelper, /checkBakongPaymentByShortHash/)
   assert.match(statusRoute, /shortHash/)
   assert.match(statusRoute, /checkBakongPaymentByShortHash/)
-  assert.match(clientSource, /Already paid\?/)
-  assert.match(clientSource, /receiptHash/)
-  assert.match(clientSource, /Confirm paid/)
+})
+
+test('Bakong checkout does not ask customers to enter receipt codes', () => {
+  const clientSource = readFileSync('app/products/[id]/product-detail-client.tsx', 'utf8')
+
+  assert.doesNotMatch(clientSource, /Already paid\?/)
+  assert.doesNotMatch(clientSource, /receiptHash/)
+  assert.doesNotMatch(clientSource, /Confirm paid/)
+  assert.doesNotMatch(clientSource, /Enter the 8-character Bakong hash/)
 })
 
 test('Bakong checkout handles provider limit without burning requests', () => {
